@@ -1,0 +1,50 @@
+# netlify.toml - Netlify deployment configuration
+[build]
+  # Build command (if needed)
+  command = "python -m pip install -r requirements.txt"
+  
+  # Directory to publish (for static files)
+  publish = "public"
+  
+  # Functions directory
+  functions = "netlify/functions"
+
+[build.environment]
+  # Python version
+  PYTHON_VERSION = "3.9"
+
+# Function configuration
+[functions]
+  # Increase timeout for content generation
+  "*" = { timeout = 120 }
+
+# Redirect rules for SPA routing
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+
+# Environment variables (set these in Netlify dashboard)
+# OPENAI_API_KEY = "your_openai_key_here"
+# DASHBOARD_TITLE = "ResponsibleAI Content Dashboard"
