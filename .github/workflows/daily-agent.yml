@@ -1,0 +1,151 @@
+name: Daily ResponsibleAI Content Generation
+
+on:
+  # Run daily at 8:00 AM EST (12:00 UTC)
+  schedule:
+    - cron: '0 12 * * *'  
+  
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Run in test mode (no posting)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  generate-content:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🚀 Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: 📦 Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: 📁 Create necessary directories
+      run: |
+        mkdir -p src/research src/generation src/utils data/analytics logs
+        
+    - name: 🧪 Run content generation pipeline
+      id: generate
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
+        TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+        TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+        TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+        TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
+        LOG_LEVEL: INFO
+      run: |
+        cd src
+        if [ "${{ github.event.inputs.test_mode }}" = "true" ]; then
+          echo "🧪 Running in test mode..."
+          python main.py --test
+        else
+          echo "🚀 Running production pipeline..."
+          python main.py
+        fi
+        
+    - name: 📊 Upload pipeline results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: pipeline-results-${{ github.run_number }}
+        path: |
+          data/analytics/
+          logs/
+        retention-days: 30
+        
+    - name: ✅ Post approved content to Twitter
+      if: env.READY_TO_POST == 'true' && github.event.inputs.test_mode != 'true'
+      # This step will be enabled when Twitter API is available
+      run: |
+        echo "✅ Content approved for posting!"
+        echo "Content: ${{ env.APPROVED_CONTENT }}"
+        # TODO: Add actual Twitter posting when API is available
+        
+    - name: 📝 Create review issue for flagged content
+      if: env.NEEDS_REVIEW == 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const title = `Content Review Required - ${new Date().toDateString()}`;
+          const body = `## Generated Content
+          ${process.env.REVIEW_CONTENT}
+          
+          ## Quality Analysis
+          - **Quality Score:** ${process.env.QUALITY_SCORE}
+          - **Timestamp:** ${new Date().toISOString()}
+          - **Pipeline Run:** #${{ github.run_number }}
+          
+          ## Review Checklist
+          - [ ] Content aligns with @ResponsibleAI voice
+          - [ ] Facts and citations are accurate  
+          - [ ] Appropriate for target audience
+          - [ ] Follows responsible AI principles
+          - [ ] No controversial or harmful content
+          
+          ## Actions
+          - [ ] Approve and post manually
+          - [ ] Edit and resubmit
+          - [ ] Reject and improve pipeline
+          
+          ---
+          *This issue was automatically created by the ResponsibleAI content agent.*
+          `;
+          
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['content-review', 'ai-generated', 'needs-human-review']
+          });
+          
+    - name: 💬 Add workflow summary
+      if: always()
+      run: |
+        echo "## 🤖 ResponsibleAI Agent Summary" >> $GITHUB_STEP_SUMMARY
+        echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+        echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Pipeline Status | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Run Number | #${{ github.run_number }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Trigger | ${{ github.event_name }} |" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -n "${{ env.READY_TO_POST }}" ]; then
+          echo "| Content Status | ✅ Approved for Posting |" >> $GITHUB_STEP_SUMMARY
+        elif [ -n "${{ env.NEEDS_REVIEW }}" ]; then
+          echo "| Content Status | ⚠️ Needs Human Review |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Content Status | ❌ Generation Failed |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📊 Generated Content Preview" >> $GITHUB_STEP_SUMMARY
+        if [ -n "${{ env.APPROVED_CONTENT }}" ]; then
+          echo '${{ env.APPROVED_CONTENT }}' >> $GITHUB_STEP_SUMMARY
+        elif [ -n "${{ env.REVIEW_CONTENT }}" ]; then
+          echo '${{ env.REVIEW_CONTENT }}' >> $GITHUB_STEP_SUMMARY
+        fi
+
+  notify-status:
+    needs: generate-content
+    runs-on: ubuntu-latest
+    if: failure()
+    
+    steps:
+    - name: 🚨 Notify on failure
+      run: |
+        echo "🚨 ResponsibleAI Agent pipeline failed!"
+        echo "Check the logs and fix any issues."
+        # TODO: Add Slack/email notifications if desired
