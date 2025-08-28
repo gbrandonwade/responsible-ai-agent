@@ -1,0 +1,31 @@
+responsible_ai:
+  twitter_handle: "ResponsibleAI"
+  topics:
+    - "AI ethics"
+    - "algorithmic bias" 
+    - "AI governance"
+    - "AI safety"
+    - "AI transparency"
+    - "inclusive AI"
+    - "responsible AI"
+    - "AI accountability"
+  
+  posting_schedule:
+    time: "12:00"  # UTC (8 AM EST)
+    timezone: "UTC"
+    
+  content_rules:
+    max_length: 280
+    require_citations: true
+    min_engagement_threshold: 50
+    quality_threshold: 0.75
+    
+apis:
+  openai:
+    model: "gpt-3.5-turbo"
+    max_tokens: 120
+    temperature: 0.7
+    
+  news:
+    max_articles: 5
+    hours_back: 24
