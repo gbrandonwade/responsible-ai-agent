@@ -156,6 +156,64 @@ exports.handler = async (event, context) => {
   html += 'margin-bottom: 1.5rem;';
   html += 'background: white;';
   html += 'box-shadow: 0 2px 4px rgba(0,0,0,0.05);';
+  html += 'transition: all 0.2s ease;';
+  html += 'min-height: auto;';
+  html += 'overflow: visible;';
+  html += 'word-wrap: break-word;';
+  html += 'word-break: break-word;';
+  html += '}';
+  
+  html += '.content-card:hover {';
+  html += 'box-shadow: 0 8px 25px rgba(0,0,0,0.1);';
+  html += 'transform: translateY(-2px);';
+  html += '}';
+  
+  // Better responsive content area
+  html += '.tweet-preview {';
+  html += 'background: var(--gray-50);';
+  html += 'border: 1px solid var(--gray-200);';
+  html += 'border-radius: 8px;';
+  html += 'padding: 1.25rem;';
+  html += 'margin: 1rem 0;';
+  html += 'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI";';
+  html += 'font-size: 1rem;';
+  html += 'line-height: 1.5;';
+  html += 'white-space: pre-wrap;';
+  html += 'word-wrap: break-word;';
+  html += 'word-break: break-word;';
+  html += 'overflow-wrap: break-word;';
+  html += 'hyphens: auto;';
+  html += 'min-height: 100px;';
+  html += 'max-height: none;';
+  html += 'overflow: visible;';
+  html += 'position: relative;';
+  html += '}';
+  
+  // Ensure long content is fully visible
+  html += '.content-section {';
+  html += 'background: white;';
+  html += 'border-radius: 12px;';
+  html += 'padding: 1.5rem;';
+  html += 'box-shadow: 0 1px 3px rgba(0,0,0,0.1);';
+  html += 'border: 1px solid var(--gray-200);';
+  html += 'overflow: visible;';
+  html += 'min-height: auto;';
+  html += '}';
+  
+  // Better responsive grid
+  html += '.dashboard-grid {';
+  html += 'display: grid;';
+  html += 'grid-template-columns: 1fr 320px;';
+  html += 'gap: 2rem;';
+  html += 'margin-bottom: 2rem;';
+  html += 'align-items: start;';
+  html += '}';
+  
+  // Responsive breakpoint  
+  html += '@media (max-width: 768px) {';
+  html += '.dashboard-grid { grid-template-columns: 1fr; }';
+  html += '.content-card { padding: 1rem; }';
+  html += '.tweet-preview { padding: 1rem; font-size: 0.9rem; }';
   html += '}';
   
   html += '.analytics-card {';
@@ -366,33 +424,69 @@ exports.handler = async (event, context) => {
   // Create content card
   html += 'function createContentCard(entry) {';
   html += 'const option = entry.content_options[0];';
+  html += 'const qualityClass = option.score >= 8 ? "high" : option.score >= 6 ? "medium" : "low";';
   html += 'let cardHtml = "<div class=\\"content-card\\" data-entry-id=\\"" + entry.id + "\\">";';
-  html += 'cardHtml += "<div style=\\"margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--gray-200);\\">";';
-  html += 'cardHtml += "<div style=\\"font-size: 0.875rem; color: var(--gray-600); margin-bottom: 0.5rem;\\">";';
-  html += 'cardHtml += "Generated " + new Date(entry.created_at).toLocaleString() + " • Issue #" + entry.id;';
+  
+  // Card header with better spacing
+  html += 'cardHtml += "<div style=\\"display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--gray-200);\\">";';
+  html += 'cardHtml += "<div>";';
+  html += 'cardHtml += "<div style=\\"font-size: 0.875rem; color: var(--gray-600); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;\\">";';
+  html += 'cardHtml += "<i class=\\"fab fa-github\\"></i>";';
+  html += 'cardHtml += "Generated " + new Date(entry.created_at).toLocaleString();';
   html += 'cardHtml += "</div>";';
   html += 'cardHtml += "<div style=\\"font-size: 0.875rem; color: var(--gray-600);\\">";';
-  html += 'cardHtml += "Topics: " + entry.research_context.trending_topics.join(", ");';
+  html += 'cardHtml += "<a href=\\"https://github.com/gbrandonwade/responsible-ai-agent/issues/" + entry.id + "\\" target=\\"_blank\\" style=\\"color: var(--primary-color); text-decoration: none;\\">Issue #" + entry.id + "</a>";';
+  html += 'cardHtml += " • Topics: " + entry.research_context.trending_topics.join(", ");';
   html += 'cardHtml += "</div>";';
   html += 'cardHtml += "</div>";';
-  html += 'cardHtml += "<div style=\\"background: var(--gray-50); padding: 1rem; border-radius: 8px; margin: 1rem 0; white-space: pre-wrap;\\">";';
+  
+  // Quality badge with conditional styling
+  html += 'let badgeStyle = "padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 600; white-space: nowrap; display: flex; align-items: center; gap: 0.25rem;";';
+  html += 'if (qualityClass === "high") {';
+  html += 'badgeStyle += " background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;";';
+  html += '} else if (qualityClass === "medium") {';
+  html += 'badgeStyle += " background: #fef3c7; color: #92400e; border: 1px solid #fde68a;";';
+  html += '} else {';
+  html += 'badgeStyle += " background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;";';
+  html += '}';
+  html += 'cardHtml += "<div style=\\"" + badgeStyle + "\\">";';
+  html += 'cardHtml += "<i class=\\"fas fa-star\\"></i> " + option.score.toFixed(1) + "/10";';
+  html += 'cardHtml += "</div>";';
+  html += 'cardHtml += "</div>";';
+  
+  // Content preview with better styling and full visibility
+  html += 'cardHtml += "<div class=\\"tweet-preview\\">";';
+  html += 'cardHtml += "<div style=\\"position: absolute; top: 0.75rem; right: 0.75rem; font-size: 1.25rem;\\">🐦</div>";';
   html += 'cardHtml += escapeHtml(option.content);';
   html += 'cardHtml += "</div>";';
-  html += 'cardHtml += "<div style=\\"font-size: 0.75rem; color: var(--gray-600); text-align: right; margin-bottom: 1rem;\\">";';
-  html += 'cardHtml += option.content.length + "/280 characters • Quality: " + option.score.toFixed(1) + "/10";';
+  
+  // Character count and metadata
+  html += 'cardHtml += "<div style=\\"display: flex; justify-content: space-between; align-items: center; margin: 1rem 0; font-size: 0.75rem; color: var(--gray-600);\\">";';
+  html += 'cardHtml += "<div><strong>Voice Score:</strong> " + option.voice_score.toFixed(1) + "/10</div>";';
+  
+  html += 'let charCountStyle = "font-weight: 500;";';
+  html += 'if (option.content.length > 280) charCountStyle += " color: var(--danger-color);";';
+  html += 'else if (option.content.length > 250) charCountStyle += " color: var(--warning-color);";';
+  html += 'cardHtml += "<div style=\\"" + charCountStyle + "\\">" + option.content.length + "/280 characters</div>";';
   html += 'cardHtml += "</div>";';
-  html += 'cardHtml += "<div style=\\"display: flex; gap: 0.75rem; flex-wrap: wrap;\\">";';
-  html += 'cardHtml += "<button class=\\"btn btn-success\\" onclick=\\"postToTwitter(\'" + entry.id + "\', \'" + option.option_number + "\')\\">";';
-  html += 'cardHtml += "<i class=\\"fas fa-paper-plane\\"></i> Post to Twitter";';
-  html += 'cardHtml += "</button>";';
+  
+  // Action buttons with improved spacing
+  html += 'cardHtml += "<div style=\\"display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--gray-100);\\">";';
+  
+  // Post to Twitter button (disabled if too long)
+  const disabledAttr = 'option.content.length > 280 ? " disabled title=\\"Content exceeds 280 character limit\\"" : ""';
+  html += 'cardHtml += "<button class=\\"btn btn-success\\" onclick=\\"postToTwitter(\'" + entry.id + "\', \'" + option.option_number + "\\')\\"" + (' + disabledAttr + ') + ">";';
+  html += 'cardHtml += "<i class=\\"fas fa-paper-plane\\"></i> Post to Twitter</button>";';
+  
+  // Other buttons
   html += 'cardHtml += "<button class=\\"btn btn-primary\\" onclick=\\"approveContent(\'" + entry.id + "\', \'" + option.option_number + "\')\\">";';
-  html += 'cardHtml += "<i class=\\"fas fa-check\\"></i> Approve & Copy";';
-  html += 'cardHtml += "</button>";';
+  html += 'cardHtml += "<i class=\\"fas fa-check\\"></i> Approve & Copy</button>";';
+  html += 'cardHtml += "<button class=\\"btn btn-secondary\\" onclick=\\"copyContent(\'" + entry.id + "\', \'" + option.option_number + "\')\\">";';
+  html += 'cardHtml += "<i class=\\"fas fa-copy\\"></i> Copy Text</button>";';
   html += 'cardHtml += "<button class=\\"btn btn-danger\\" onclick=\\"rejectContent(\'" + entry.id + "\')\\">";';
-  html += 'cardHtml += "<i class=\\"fas fa-times\\"></i> Reject";';
-  html += 'cardHtml += "</button>";';
-  html += 'cardHtml += "</div>";';
-  html += 'cardHtml += "</div>";';
+  html += 'cardHtml += "<i class=\\"fas fa-times\\"></i> Reject</button>";';
+  
+  html += 'cardHtml += "</div></div>";';
   html += 'return cardHtml;';
   html += '}';
   
@@ -486,7 +580,7 @@ exports.handler = async (event, context) => {
   html += '}';
   
   html += 'function openGitHubActions() {';
-  html += 'window.open("https://github.com/gbrandonwade/responsible-ai-agent/actions", "_blank");';
+  html += 'window.open("https://github.com/your-username/responsible-ai-agent/actions", "_blank");';
   html += '}';
   
   html += 'function showToast(message, type) {';
