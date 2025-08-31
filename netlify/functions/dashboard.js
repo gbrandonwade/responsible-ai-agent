@@ -1,5 +1,5 @@
-// netlify/functions/dashboard.js - CLEAN LIVE VERSION
-// Fixed all JavaScript syntax issues
+// netlify/functions/dashboard.js - CLEAN SYNTAX VERSION
+// Fixed all JavaScript syntax issues with simple string building
 
 exports.handler = async (event, context) => {
   // Handle CORS preflight
@@ -15,585 +15,816 @@ exports.handler = async (event, context) => {
     };
   }
 
-  // Build HTML using simple string concatenation to avoid syntax issues
-  let html = '<!DOCTYPE html>';
-  html += '<html lang="en">';
-  html += '<head>';
-  html += '<meta charset="UTF-8">';
-  html += '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
-  html += '<title>ResponsibleAI Dashboard - LIVE</title>';
-  html += '<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">';
-  
-  // Add CSS
-  html += '<style>';
-  html += ':root {';
-  html += '--primary-color: #2563eb;';
-  html += '--success-color: #10b981;';
-  html += '--danger-color: #ef4444;';
-  html += '--warning-color: #f59e0b;';
-  html += '--gray-50: #f9fafb;';
-  html += '--gray-100: #f3f4f6;';
-  html += '--gray-200: #e5e7eb;';
-  html += '--gray-600: #4b5563;';
-  html += '--gray-900: #111827;';
-  html += '}';
-  
-  html += '* { margin: 0; padding: 0; box-sizing: border-box; }';
-  
-  html += 'body {';
-  html += 'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;';
-  html += 'background: var(--gray-50);';
-  html += 'color: var(--gray-900);';
-  html += 'line-height: 1.6;';
-  html += '}';
-  
-  html += '.header {';
-  html += 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);';
-  html += 'color: white;';
-  html += 'padding: 1.5rem 0;';
-  html += 'box-shadow: 0 4px 12px rgba(0,0,0,0.1);';
-  html += '}';
-  
-  html += '.container {';
-  html += 'max-width: 1200px;';
-  html += 'margin: 0 auto;';
-  html += 'padding: 0 1rem;';
-  html += '}';
-  
-  html += '.header-content {';
-  html += 'display: flex;';
-  html += 'justify-content: space-between;';
-  html += 'align-items: center;';
-  html += 'flex-wrap: wrap;';
-  html += 'gap: 1rem;';
-  html += '}';
-  
-  html += '.logo {';
-  html += 'display: flex;';
-  html += 'align-items: center;';
-  html += 'font-size: 1.75rem;';
-  html += 'font-weight: 700;';
-  html += '}';
-  
-  html += '.logo i { margin-right: 0.75rem; }';
-  
-  html += '.live-indicator {';
-  html += 'background: rgba(16, 185, 129, 0.2);';
-  html += 'border: 1px solid #10b981;';
-  html += 'padding: 0.25rem 0.75rem;';
-  html += 'border-radius: 20px;';
-  html += 'font-size: 0.75rem;';
-  html += 'font-weight: 600;';
-  html += 'margin-left: 1rem;';
-  html += '}';
-  
-  html += '.stats-bar {';
-  html += 'display: flex;';
-  html += 'gap: 1rem;';
-  html += 'font-size: 0.875rem;';
-  html += 'flex-wrap: wrap;';
-  html += '}';
-  
-  html += '.stat {';
-  html += 'display: flex;';
-  html += 'align-items: center;';
-  html += 'gap: 0.5rem;';
-  html += 'background: rgba(255,255,255,0.1);';
-  html += 'padding: 0.5rem 1rem;';
-  html += 'border-radius: 6px;';
-  html += '}';
-  
-  html += '.main-content { padding: 2rem 0; }';
-  
-  html += '.dashboard-grid {';
-  html += 'display: grid;';
-  html += 'grid-template-columns: 1fr 320px;';
-  html += 'gap: 2rem;';
-  html += 'margin-bottom: 2rem;';
-  html += '}';
-  
-  html += '.content-section {';
-  html += 'background: white;';
-  html += 'border-radius: 12px;';
-  html += 'padding: 1.5rem;';
-  html += 'box-shadow: 0 1px 3px rgba(0,0,0,0.1);';
-  html += 'border: 1px solid var(--gray-200);';
-  html += '}';
-  
-  html += '.section-title {';
-  html += 'font-size: 1.25rem;';
-  html += 'font-weight: 600;';
-  html += 'margin-bottom: 1.5rem;';
-  html += 'display: flex;';
-  html += 'align-items: center;';
-  html += 'gap: 0.5rem;';
-  html += '}';
-  
-  html += '.loading {';
-  html += 'display: flex;';
-  html += 'justify-content: center;';
-  html += 'align-items: center;';
-  html += 'padding: 3rem;';
-  html += 'flex-direction: column;';
-  html += 'gap: 1rem;';
-  html += '}';
-  
-  html += '.spinner {';
-  html += 'border: 3px solid var(--gray-200);';
-  html += 'border-top: 3px solid var(--primary-color);';
-  html += 'border-radius: 50%;';
-  html += 'width: 32px;';
-  html += 'height: 32px;';
-  html += 'animation: spin 1s linear infinite;';
-  html += '}';
-  
-  html += '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
-  
-  html += '.content-card {';
-  html += 'border: 1px solid var(--gray-200);';
-  html += 'border-radius: 12px;';
-  html += 'padding: 1.5rem;';
-  html += 'margin-bottom: 1.5rem;';
-  html += 'background: white;';
-  html += 'box-shadow: 0 2px 4px rgba(0,0,0,0.05);';
-  html += 'transition: all 0.2s ease;';
-  html += 'min-height: auto;';
-  html += 'overflow: visible;';
-  html += 'word-wrap: break-word;';
-  html += 'word-break: break-word;';
-  html += '}';
-  
-  html += '.content-card:hover {';
-  html += 'box-shadow: 0 8px 25px rgba(0,0,0,0.1);';
-  html += 'transform: translateY(-2px);';
-  html += '}';
-  
-  // Better responsive content area
-  html += '.tweet-preview {';
-  html += 'background: var(--gray-50);';
-  html += 'border: 1px solid var(--gray-200);';
-  html += 'border-radius: 8px;';
-  html += 'padding: 1.25rem;';
-  html += 'margin: 1rem 0;';
-  html += 'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI";';
-  html += 'font-size: 1rem;';
-  html += 'line-height: 1.5;';
-  html += 'white-space: pre-wrap;';
-  html += 'word-wrap: break-word;';
-  html += 'word-break: break-word;';
-  html += 'overflow-wrap: break-word;';
-  html += 'hyphens: auto;';
-  html += 'min-height: 100px;';
-  html += 'max-height: none;';
-  html += 'overflow: visible;';
-  html += 'position: relative;';
-  html += '}';
-  
-  // Ensure long content is fully visible
-  html += '.content-section {';
-  html += 'background: white;';
-  html += 'border-radius: 12px;';
-  html += 'padding: 1.5rem;';
-  html += 'box-shadow: 0 1px 3px rgba(0,0,0,0.1);';
-  html += 'border: 1px solid var(--gray-200);';
-  html += 'overflow: visible;';
-  html += 'min-height: auto;';
-  html += '}';
-  
-  // Better responsive grid
-  html += '.dashboard-grid {';
-  html += 'display: grid;';
-  html += 'grid-template-columns: 1fr 320px;';
-  html += 'gap: 2rem;';
-  html += 'margin-bottom: 2rem;';
-  html += 'align-items: start;';
-  html += '}';
-  
-  // Responsive breakpoint  
-  html += '@media (max-width: 768px) {';
-  html += '.dashboard-grid { grid-template-columns: 1fr; }';
-  html += '.content-card { padding: 1rem; }';
-  html += '.tweet-preview { padding: 1rem; font-size: 0.9rem; }';
-  html += '}';
-  
-  html += '.analytics-card {';
-  html += 'background: white;';
-  html += 'border-radius: 12px;';
-  html += 'padding: 1.5rem;';
-  html += 'box-shadow: 0 1px 3px rgba(0,0,0,0.1);';
-  html += 'border: 1px solid var(--gray-200);';
-  html += 'margin-bottom: 1.5rem;';
-  html += '}';
-  
-  html += '.metric {';
-  html += 'display: flex;';
-  html += 'justify-content: space-between;';
-  html += 'align-items: center;';
-  html += 'padding: 0.75rem 0;';
-  html += 'border-bottom: 1px solid var(--gray-100);';
-  html += '}';
-  
-  html += '.metric:last-child { border-bottom: none; }';
-  
-  html += '.btn {';
-  html += 'padding: 0.75rem 1.25rem;';
-  html += 'border-radius: 8px;';
-  html += 'border: none;';
-  html += 'font-size: 0.875rem;';
-  html += 'font-weight: 600;';
-  html += 'cursor: pointer;';
-  html += 'display: inline-flex;';
-  html += 'align-items: center;';
-  html += 'gap: 0.5rem;';
-  html += 'margin: 0.25rem;';
-  html += '}';
-  
-  html += '.btn-primary { background: var(--primary-color); color: white; }';
-  html += '.btn-success { background: var(--success-color); color: white; }';
-  html += '.btn-danger { background: var(--danger-color); color: white; }';
-  html += '.btn-secondary { background: var(--gray-600); color: white; }';
-  
-  html += '.connection-status {';
-  html += 'background: rgba(16, 185, 129, 0.1);';
-  html += 'border: 1px solid #10b981;';
-  html += 'color: #065f46;';
-  html += 'padding: 0.75rem 1rem;';
-  html += 'border-radius: 8px;';
-  html += 'margin-bottom: 1.5rem;';
-  html += 'display: flex;';
-  html += 'align-items: center;';
-  html += 'gap: 0.5rem;';
-  html += '}';
-  
-  html += '.error-status {';
-  html += 'background: rgba(239, 68, 68, 0.1);';
-  html += 'border: 1px solid #ef4444;';
-  html += 'color: #991b1b;';
-  html += '}';
-  
-  html += '.toast {';
-  html += 'position: fixed;';
-  html += 'top: 20px;';
-  html += 'right: 20px;';
-  html += 'padding: 1rem 1.5rem;';
-  html += 'border-radius: 8px;';
-  html += 'color: white;';
-  html += 'transform: translateX(100%);';
-  html += 'transition: transform 0.3s ease;';
-  html += 'z-index: 1000;';
-  html += '}';
-  
-  html += '.toast.show { transform: translateX(0); }';
-  html += '.toast.success { background: var(--success-color); }';
-  html += '.toast.error { background: var(--danger-color); }';
-  
-  html += '</style>';
-  html += '</head>';
-  
-  // Body content
-  html += '<body>';
-  
-  // Header
-  html += '<div class="header">';
-  html += '<div class="container">';
-  html += '<div class="header-content">';
-  html += '<div style="display: flex; align-items: center;">';
-  html += '<div class="logo">';
-  html += '<i class="fas fa-robot"></i> ResponsibleAI Dashboard';
-  html += '</div>';
-  html += '<div class="live-indicator">🟢 LIVE SYSTEM</div>';
-  html += '</div>';
-  html += '<div class="stats-bar">';
-  html += '<div class="stat"><i class="fas fa-clock"></i> <span id="lastUpdate">Loading...</span></div>';
-  html += '<div class="stat"><i class="fas fa-chart-line"></i> <span id="qualityAvg">Loading...</span></div>';
-  html += '<div class="stat"><i class="fas fa-check-circle"></i> <span id="approvalRate">Loading...</span></div>';
-  html += '</div>';
-  html += '</div>';
-  html += '</div>';
-  html += '</div>';
-  
-  // Main content
-  html += '<div class="container">';
-  html += '<div class="main-content">';
-  
-  // Connection status
-  html += '<div id="connectionStatus" class="connection-status">';
-  html += '<i class="fas fa-wifi"></i> <span>Connecting to GitHub Issues API and Twitter...</span>';
-  html += '</div>';
-  
-  html += '<div class="dashboard-grid">';
-  
-  // Main content area
-  html += '<div class="pending-content">';
-  html += '<div class="content-section">';
-  html += '<h2 class="section-title">';
-  html += '<i class="fas fa-edit"></i> Pending Review';
-  html += '</h2>';
-  html += '<div id="pendingContent">';
-  html += '<div class="loading">';
-  html += '<div class="spinner"></div>';
-  html += '<p>Loading content from GitHub Issues...</p>';
-  html += '</div>';
-  html += '</div>';
-  html += '</div>';
-  html += '</div>';
-  
-  // Sidebar
-  html += '<div class="sidebar">';
-  
-  // Analytics card
-  html += '<div class="analytics-card">';
-  html += '<h3 class="section-title"><i class="fas fa-chart-bar"></i> Live Analytics</h3>';
-  html += '<div class="metric"><span>Total Entries</span><span id="totalEntries">-</span></div>';
-  html += '<div class="metric"><span>This Week</span><span id="weeklyEntries">-</span></div>';
-  html += '<div class="metric"><span>Approval Rate</span><span id="approvalRateDetail">-</span></div>';
-  html += '<div class="metric"><span>Avg Quality</span><span id="avgQuality">-</span></div>';
-  html += '</div>';
-  
-  // Quick actions card
-  html += '<div class="analytics-card">';
-  html += '<h3 class="section-title"><i class="fas fa-bolt"></i> Quick Actions</h3>';
-  html += '<button class="btn btn-primary" onclick="refreshDashboard()" style="width: 100%; margin-bottom: 0.75rem;">';
-  html += '<i class="fas fa-sync-alt"></i> Refresh Data';
-  html += '</button>';
-  html += '<button class="btn btn-success" onclick="openGitHubActions()" style="width: 100%;">';
-  html += '<i class="fas fa-play"></i> Generate New Content';
-  html += '</button>';
-  html += '</div>';
-  
-  html += '</div>'; // Close sidebar
-  html += '</div>'; // Close dashboard-grid
-  html += '</div>'; // Close main-content
-  html += '</div>'; // Close container
-  
-  // Toast
-  html += '<div id="toast" class="toast"></div>';
-  
-  // JavaScript
-  html += '<script>';
-  html += 'let dashboardData = { entries: [], analytics: {} };';
-  
-  // Initialize
-  html += 'document.addEventListener("DOMContentLoaded", function() {';
-  html += 'console.log("Initializing Live ResponsibleAI Dashboard...");';
-  html += 'loadDashboardData();';
-  html += 'setInterval(loadDashboardData, 2 * 60 * 1000);';
-  html += '});';
-  
-  // Load dashboard data
-  html += 'async function loadDashboardData() {';
-  html += 'try {';
-  html += 'console.log("Loading live data...");';
-  html += 'const entriesUrl = window.location.origin + "/.netlify/functions/entries";';
-  html += 'const analyticsUrl = window.location.origin + "/.netlify/functions/analytics";';
-  html += 'const [entriesResponse, analyticsResponse] = await Promise.all([';
-  html += 'fetch(entriesUrl), fetch(analyticsUrl)';
-  html += ']);';
-  html += 'const entriesData = await entriesResponse.json();';
-  html += 'const analyticsData = await analyticsResponse.json();';
-  html += 'if (entriesData.success) {';
-  html += 'dashboardData.entries = entriesData.entries || [];';
-  html += 'renderPendingContent(entriesData.entries || []);';
-  html += 'updateConnectionStatus("Connected to GitHub Issues API", "success");';
-  html += '}';
-  html += 'if (analyticsData.success) {';
-  html += 'updateHeaderStats(analyticsData.analytics || {});';
-  html += 'updateAnalytics(analyticsData.analytics || {});';
-  html += '}';
-  html += '} catch (error) {';
-  html += 'console.error("Failed to load data:", error);';
-  html += 'updateConnectionStatus("Failed to connect to APIs", "error");';
-  html += 'renderPendingContent([]);';
-  html += '}';
-  html += '}';
-  
-  // Render pending content
-  html += 'function renderPendingContent(entries) {';
-  html += 'const container = document.getElementById("pendingContent");';
-  html += 'if (!entries || entries.length === 0) {';
-  html += 'container.innerHTML = "<div style=\\"text-align: center; padding: 3rem;\\"><i class=\\"fas fa-check-circle\\" style=\\"font-size: 3rem; color: var(--success-color);\\"></i><h3>No content pending review</h3><p>New content will appear when your Python agent creates GitHub issues</p></div>";';
-  html += 'return;';
-  html += '}';
-  html += 'let contentHtml = "";';
-  html += 'entries.forEach(function(entry) {';
-  html += 'contentHtml += createContentCard(entry);';
-  html += '});';
-  html += 'container.innerHTML = contentHtml;';
-  html += '}';
-  
-  // Create content card
-  html += 'function createContentCard(entry) {';
-  html += 'const option = entry.content_options[0];';
-  html += 'const qualityClass = option.score >= 8 ? "high" : option.score >= 6 ? "medium" : "low";';
-  html += 'let cardHtml = "<div class=\\"content-card\\" data-entry-id=\\"" + entry.id + "\\">";';
-  
-  // Card header with better spacing
-  html += 'cardHtml += "<div style=\\"display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--gray-200);\\">";';
-  html += 'cardHtml += "<div>";';
-  html += 'cardHtml += "<div style=\\"font-size: 0.875rem; color: var(--gray-600); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;\\">";';
-  html += 'cardHtml += "<i class=\\"fab fa-github\\"></i>";';
-  html += 'cardHtml += "Generated " + new Date(entry.created_at).toLocaleString();';
-  html += 'cardHtml += "</div>";';
-  html += 'cardHtml += "<div style=\\"font-size: 0.875rem; color: var(--gray-600);\\">";';
-  html += 'cardHtml += "<a href=\\"https://github.com/gbrandonwade/responsible-ai-agent/issues/" + entry.id + "\\" target=\\"_blank\\" style=\\"color: var(--primary-color); text-decoration: none;\\">Issue #" + entry.id + "</a>";';
-  html += 'cardHtml += " • Topics: " + entry.research_context.trending_topics.join(", ");';
-  html += 'cardHtml += "</div>";';
-  html += 'cardHtml += "</div>";';
-  
-  // Quality badge with conditional styling
-  html += 'let badgeStyle = "padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.875rem; font-weight: 600; white-space: nowrap; display: flex; align-items: center; gap: 0.25rem;";';
-  html += 'if (qualityClass === "high") {';
-  html += 'badgeStyle += " background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;";';
-  html += '} else if (qualityClass === "medium") {';
-  html += 'badgeStyle += " background: #fef3c7; color: #92400e; border: 1px solid #fde68a;";';
-  html += '} else {';
-  html += 'badgeStyle += " background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;";';
-  html += '}';
-  html += 'cardHtml += "<div style=\\"" + badgeStyle + "\\">";';
-  html += 'cardHtml += "<i class=\\"fas fa-star\\"></i> " + option.score.toFixed(1) + "/10";';
-  html += 'cardHtml += "</div>";';
-  html += 'cardHtml += "</div>";';
-  
-  // Content preview with better styling and full visibility
-  html += 'cardHtml += "<div class=\\"tweet-preview\\">";';
-  html += 'cardHtml += "<div style=\\"position: absolute; top: 0.75rem; right: 0.75rem; font-size: 1.25rem;\\">🐦</div>";';
-  html += 'cardHtml += escapeHtml(option.content);';
-  html += 'cardHtml += "</div>";';
-  
-  // Character count and metadata
-  html += 'cardHtml += "<div style=\\"display: flex; justify-content: space-between; align-items: center; margin: 1rem 0; font-size: 0.75rem; color: var(--gray-600);\\">";';
-  html += 'cardHtml += "<div><strong>Voice Score:</strong> " + option.voice_score.toFixed(1) + "/10</div>";';
-  
-  html += 'let charCountStyle = "font-weight: 500;";';
-  html += 'if (option.content.length > 280) charCountStyle += " color: var(--danger-color);";';
-  html += 'else if (option.content.length > 250) charCountStyle += " color: var(--warning-color);";';
-  html += 'cardHtml += "<div style=\\"" + charCountStyle + "\\">" + option.content.length + "/280 characters</div>";';
-  html += 'cardHtml += "</div>";';
-  
-  // Action buttons with improved spacing
-  html += 'cardHtml += "<div style=\\"display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--gray-100);\\">";';
-  
-  // Post to Twitter button (disabled if too long)
-  const disabledAttr = 'option.content.length > 280 ? " disabled title=\\"Content exceeds 280 character limit\\"" : ""';
-  html += 'cardHtml += "<button class=\\"btn btn-success\\" onclick=\\"postToTwitter(\'" + entry.id + "\', \'" + option.option_number + "\\')\\"" + (' + disabledAttr + ') + ">";';
-  html += 'cardHtml += "<i class=\\"fas fa-paper-plane\\"></i> Post to Twitter</button>";';
-  
-  // Other buttons
-  html += 'cardHtml += "<button class=\\"btn btn-primary\\" onclick=\\"approveContent(\'" + entry.id + "\', \'" + option.option_number + "\')\\">";';
-  html += 'cardHtml += "<i class=\\"fas fa-check\\"></i> Approve & Copy</button>";';
-  html += 'cardHtml += "<button class=\\"btn btn-secondary\\" onclick=\\"copyContent(\'" + entry.id + "\', \'" + option.option_number + "\')\\">";';
-  html += 'cardHtml += "<i class=\\"fas fa-copy\\"></i> Copy Text</button>";';
-  html += 'cardHtml += "<button class=\\"btn btn-danger\\" onclick=\\"rejectContent(\'" + entry.id + "\')\\">";';
-  html += 'cardHtml += "<i class=\\"fas fa-times\\"></i> Reject</button>";';
-  
-  html += 'cardHtml += "</div></div>";';
-  html += 'return cardHtml;';
-  html += '}';
-  
-  // Helper functions
-  html += 'function escapeHtml(text) {';
-  html += 'const div = document.createElement("div");';
-  html += 'div.textContent = text;';
-  html += 'return div.innerHTML;';
-  html += '}';
-  
-  html += 'function updateConnectionStatus(message, type) {';
-  html += 'const statusEl = document.getElementById("connectionStatus");';
-  html += 'const iconClass = type === "success" ? "check-circle" : "exclamation-triangle";';
-  html += 'statusEl.innerHTML = "<i class=\\"fas fa-" + iconClass + "\\"></i><span>" + message + "</span>";';
-  html += 'statusEl.className = "connection-status" + (type === "error" ? " error-status" : "");';
-  html += '}';
-  
-  html += 'function updateHeaderStats(analytics) {';
-  html += 'document.getElementById("lastUpdate").textContent = analytics.last_generated ? new Date(analytics.last_generated).toLocaleString() : "Never";';
-  html += 'document.getElementById("qualityAvg").textContent = (analytics.average_quality_score || 0).toFixed(1) + "/10";';
-  html += 'document.getElementById("approvalRate").textContent = Math.round(analytics.approval_rate || 0) + "%";';
-  html += '}';
-  
-  html += 'function updateAnalytics(analytics) {';
-  html += 'document.getElementById("totalEntries").textContent = analytics.total_entries || 0;';
-  html += 'document.getElementById("weeklyEntries").textContent = analytics.recent_entries || 0;';
-  html += 'document.getElementById("approvalRateDetail").textContent = Math.round(analytics.approval_rate || 0) + "%";';
-  html += 'document.getElementById("avgQuality").textContent = (analytics.average_quality_score || 0).toFixed(1) + "/10";';
-  html += '}';
-  
-  // Action functions
-  html += 'async function postToTwitter(entryId, optionNumber) {';
-  html += 'if (!confirm("Post this content to @ResponsibleAI Twitter?")) return;';
-  html += 'const entry = dashboardData.entries.find(e => e.id === entryId);';
-  html += 'const option = entry.content_options.find(o => o.option_number == optionNumber);';
-  html += 'if (!option) return;';
-  html += 'try {';
-  html += 'showToast("Posting to Twitter...", "success");';
-  html += 'const response = await fetch(window.location.origin + "/.netlify/functions/post-to-twitter", {';
-  html += 'method: "POST",';
-  html += 'headers: { "Content-Type": "application/json" },';
-  html += 'body: JSON.stringify({ content: option.content, entryId: entryId })';
-  html += '});';
-  html += 'const result = await response.json();';
-  html += 'if (result.success) {';
-  html += 'showToast("Posted to Twitter successfully!", "success");';
-  html += 'await updateEntryStatus(entryId, "approved");';
-  html += 'loadDashboardData();';
-  html += '} else {';
-  html += 'throw new Error(result.error);';
-  html += '}';
-  html += '} catch (error) {';
-  html += 'showToast("Failed to post: " + error.message, "error");';
-  html += '}';
-  html += '}';
-  
-  html += 'async function approveContent(entryId, optionNumber) {';
-  html += 'const entry = dashboardData.entries.find(e => e.id === entryId);';
-  html += 'const option = entry.content_options.find(o => o.option_number == optionNumber);';
-  html += 'if (!option) return;';
-  html += 'await navigator.clipboard.writeText(option.content);';
-  html += 'await updateEntryStatus(entryId, "approved");';
-  html += 'showToast("Content approved and copied!", "success");';
-  html += 'loadDashboardData();';
-  html += '}';
-  
-  html += 'async function rejectContent(entryId) {';
-  html += 'const reason = prompt("Rejection reason (optional):");';
-  html += 'await updateEntryStatus(entryId, "rejected");';
-  html += 'showToast("Content rejected", "error");';
-  html += 'loadDashboardData();';
-  html += '}';
-  
-  html += 'async function updateEntryStatus(entryId, status) {';
-  html += 'try {';
-  html += 'const response = await fetch(window.location.origin + "/.netlify/functions/entry-status", {';
-  html += 'method: "POST",';
-  html += 'headers: { "Content-Type": "application/json" },';
-  html += 'body: JSON.stringify({ entryId: entryId, status: status })';
-  html += '});';
-  html += 'const result = await response.json();';
-  html += 'if (!result.success) throw new Error(result.error);';
-  html += '} catch (error) {';
-  html += 'console.error("Failed to update status:", error);';
-  html += '}';
-  html += '}';
-  
-  html += 'function refreshDashboard() {';
-  html += 'showToast("Refreshing...", "success");';
-  html += 'loadDashboardData();';
-  html += '}';
-  
-  html += 'function openGitHubActions() {';
-  html += 'window.open("https://github.com/your-username/responsible-ai-agent/actions", "_blank");';
-  html += '}';
-  
-  html += 'function showToast(message, type) {';
-  html += 'const toast = document.getElementById("toast");';
-  html += 'toast.textContent = message;';
-  html += 'toast.className = "toast " + type;';
-  html += 'toast.classList.add("show");';
-  html += 'setTimeout(function() { toast.classList.remove("show"); }, 3000);';
-  html += '}';
-  
-  html += '</script>';
-  html += '</body>';
-  html += '</html>';
+  // Create the HTML page
+  const dashboardHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResponsibleAI Dashboard - LIVE</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-900: #111827;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+        
+        .logo i {
+            margin-right: 0.75rem;
+        }
+        
+        .live-indicator {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 1rem;
+        }
+        
+        .stats-bar {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+        
+        .main-content {
+            padding: 2rem 0;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 2rem;
+            align-items: start;
+        }
+        
+        .content-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--gray-200);
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .spinner {
+            border: 3px solid var(--gray-200);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .content-card {
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+            overflow: visible;
+            word-wrap: break-word;
+        }
+        
+        .content-card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        
+        .card-meta {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 0.5rem;
+        }
+        
+        .github-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .github-link:hover {
+            text-decoration: underline;
+        }
+        
+        .quality-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .quality-high {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .quality-medium {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+        
+        .quality-low {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .tweet-preview {
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1rem 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI';
+            font-size: 1rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            position: relative;
+            min-height: 100px;
+            max-height: none;
+            overflow: visible;
+        }
+        
+        .tweet-preview::after {
+            content: "🐦";
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            font-size: 1.25rem;
+        }
+        
+        .char-count {
+            font-size: 0.75rem;
+            text-align: right;
+            margin: 0.5rem 0 1rem 0;
+            font-weight: 500;
+        }
+        
+        .char-count.warning {
+            color: var(--warning-color);
+        }
+        
+        .char-count.danger {
+            color: var(--danger-color);
+        }
+        
+        .btn {
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.25rem;
+            transition: all 0.2s ease;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: var(--gray-600);
+            color: white;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--gray-100);
+        }
+        
+        .analytics-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--gray-200);
+            margin-bottom: 1.5rem;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        
+        .metric:last-child {
+            border-bottom: none;
+        }
+        
+        .connection-status {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid #10b981;
+            color: #065f46;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .error-status {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast.success {
+            background: var(--success-color);
+        }
+        
+        .toast.error {
+            background: var(--danger-color);
+        }
+        
+        .no-content {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray-600);
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .header-content {
+                flex-direction: column;
+            }
+            .action-buttons {
+                flex-direction: column;
+            }
+            .btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <div style="display: flex; align-items: center;">
+                    <div class="logo">
+                        <i class="fas fa-robot"></i>
+                        ResponsibleAI Dashboard
+                    </div>
+                    <div class="live-indicator">🟢 LIVE SYSTEM</div>
+                </div>
+                <div class="stats-bar">
+                    <div class="stat">
+                        <i class="fas fa-clock"></i>
+                        <span id="lastUpdate">Loading...</span>
+                    </div>
+                    <div class="stat">
+                        <i class="fas fa-chart-line"></i>
+                        <span id="qualityAvg">Loading...</span>
+                    </div>
+                    <div class="stat">
+                        <i class="fas fa-check-circle"></i>
+                        <span id="approvalRate">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-content">
+            <div id="connectionStatus" class="connection-status">
+                <i class="fas fa-wifi"></i>
+                <span>Connecting to GitHub Issues API and Twitter...</span>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="pending-content">
+                    <div class="content-section">
+                        <h2 class="section-title">
+                            <i class="fas fa-edit"></i>
+                            Pending Review
+                        </h2>
+                        <div id="pendingContent">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <p>Loading content from GitHub Issues...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar">
+                    <div class="analytics-card">
+                        <h3 class="section-title">
+                            <i class="fas fa-chart-bar"></i>
+                            Live Analytics
+                        </h3>
+                        <div class="metric">
+                            <span>Total Entries</span>
+                            <span id="totalEntries">-</span>
+                        </div>
+                        <div class="metric">
+                            <span>This Week</span>
+                            <span id="weeklyEntries">-</span>
+                        </div>
+                        <div class="metric">
+                            <span>Approval Rate</span>
+                            <span id="approvalRateDetail">-</span>
+                        </div>
+                        <div class="metric">
+                            <span>Avg Quality</span>
+                            <span id="avgQuality">-</span>
+                        </div>
+                    </div>
+
+                    <div class="analytics-card">
+                        <h3 class="section-title">
+                            <i class="fas fa-bolt"></i>
+                            Quick Actions
+                        </h3>
+                        <button class="btn btn-primary" onclick="refreshDashboard()" style="width: 100%; margin-bottom: 0.75rem;">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh Data
+                        </button>
+                        <button class="btn btn-success" onclick="createTestIssue()" style="width: 100%;">
+                            <i class="fas fa-plus"></i>
+                            Create Test Issue
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        let dashboardData = { entries: [], analytics: {} };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Initializing Live ResponsibleAI Dashboard...');
+            loadDashboardData();
+            setInterval(loadDashboardData, 2 * 60 * 1000);
+        });
+
+        async function loadDashboardData() {
+            try {
+                console.log('Loading live data from GitHub...');
+                
+                const entriesUrl = window.location.origin + '/.netlify/functions/entries';
+                const analyticsUrl = window.location.origin + '/.netlify/functions/analytics';
+                
+                const [entriesResponse, analyticsResponse] = await Promise.all([
+                    fetch(entriesUrl),
+                    fetch(analyticsUrl)
+                ]);
+                
+                const entriesData = await entriesResponse.json();
+                const analyticsData = await analyticsResponse.json();
+                
+                console.log('Entries data:', entriesData);
+                console.log('Analytics data:', analyticsData);
+                
+                if (entriesData.success) {
+                    dashboardData.entries = entriesData.entries || [];
+                    renderPendingContent(entriesData.entries || []);
+                    updateConnectionStatus('✅ Connected to GitHub Issues API', 'success');
+                } else {
+                    updateConnectionStatus('❌ GitHub API Error: ' + (entriesData.error || 'Unknown'), 'error');
+                }
+                
+                if (analyticsData.success) {
+                    updateHeaderStats(analyticsData.analytics || {});
+                    updateAnalytics(analyticsData.analytics || {});
+                }
+                
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+                updateConnectionStatus('❌ Failed to connect to APIs', 'error');
+                renderPendingContent([]);
+            }
+        }
+
+        function renderPendingContent(entries) {
+            const container = document.getElementById('pendingContent');
+            
+            if (!entries || entries.length === 0) {
+                container.innerHTML = 
+                    '<div class="no-content">' +
+                    '<i class="fas fa-check-circle" style="font-size: 3rem; color: var(--success-color); margin-bottom: 1rem;"></i>' +
+                    '<h3 style="margin-bottom: 1rem;">No content pending review</h3>' +
+                    '<p style="margin-bottom: 2rem;">New content will appear when your Python agent creates GitHub issues</p>' +
+                    '<button class="btn btn-primary" onclick="createTestIssue()">' +
+                    '<i class="fas fa-plus"></i> Create Test Issue' +
+                    '</button>' +
+                    '</div>';
+                return;
+            }
+            
+            let contentHtml = '';
+            entries.forEach(function(entry) {
+                contentHtml += createContentCard(entry);
+            });
+            container.innerHTML = contentHtml;
+        }
+
+        function createContentCard(entry) {
+            const option = entry.content_options[0];
+            const score = option.score || 0;
+            const voiceScore = option.voice_score || 0;
+            const content = option.content || '';
+            const charCount = content.length;
+            
+            // Determine quality class
+            let qualityClass = 'quality-low';
+            if (score >= 8) qualityClass = 'quality-high';
+            else if (score >= 6) qualityClass = 'quality-medium';
+            
+            // Determine char count class
+            let charClass = '';
+            if (charCount > 280) charClass = ' danger';
+            else if (charCount > 250) charClass = ' warning';
+            
+            let cardHtml = '<div class="content-card" data-entry-id="' + entry.id + '">';
+            
+            // Header
+            cardHtml += '<div class="card-header">';
+            cardHtml += '<div>';
+            cardHtml += '<div class="card-meta">';
+            cardHtml += '<i class="fab fa-github"></i> ';
+            cardHtml += 'Generated ' + new Date(entry.created_at).toLocaleString();
+            cardHtml += '</div>';
+            cardHtml += '<div class="card-meta">';
+            cardHtml += '<a href="https://github.com/gbrandonwade/responsible-ai-agent/issues/' + entry.id + '" target="_blank" class="github-link">Issue #' + entry.id + '</a>';
+            cardHtml += ' • Topics: ' + entry.research_context.trending_topics.join(', ');
+            cardHtml += '</div>';
+            cardHtml += '</div>';
+            cardHtml += '<div class="quality-badge ' + qualityClass + '">';
+            cardHtml += '<i class="fas fa-star"></i> ';
+            cardHtml += score.toFixed(1) + '/10';
+            cardHtml += '</div>';
+            cardHtml += '</div>';
+            
+            // Content preview
+            cardHtml += '<div class="tweet-preview">';
+            cardHtml += escapeHtml(content);
+            cardHtml += '</div>';
+            
+            // Character count
+            cardHtml += '<div class="char-count' + charClass + '">';
+            cardHtml += charCount + '/280 characters • Voice: ' + voiceScore.toFixed(1) + '/10';
+            cardHtml += '</div>';
+            
+            // Action buttons
+            cardHtml += '<div class="action-buttons">';
+            
+            // Post to Twitter button
+            if (charCount <= 280) {
+                cardHtml += '<button class="btn btn-success" onclick="postToTwitter(\'' + entry.id + '\', \'' + option.option_number + '\')">';
+                cardHtml += '<i class="fas fa-paper-plane"></i> Post to Twitter';
+                cardHtml += '</button>';
+            } else {
+                cardHtml += '<button class="btn btn-success" disabled title="Content exceeds 280 characters">';
+                cardHtml += '<i class="fas fa-paper-plane"></i> Too Long for Twitter';
+                cardHtml += '</button>';
+            }
+            
+            // Other action buttons
+            cardHtml += '<button class="btn btn-primary" onclick="approveContent(\'' + entry.id + '\', \'' + option.option_number + '\')">';
+            cardHtml += '<i class="fas fa-check"></i> Approve & Copy';
+            cardHtml += '</button>';
+            
+            cardHtml += '<button class="btn btn-secondary" onclick="copyContent(\'' + entry.id + '\', \'' + option.option_number + '\')">';
+            cardHtml += '<i class="fas fa-copy"></i> Copy Text';
+            cardHtml += '</button>';
+            
+            cardHtml += '<button class="btn btn-danger" onclick="rejectContent(\'' + entry.id + '\')">';
+            cardHtml += '<i class="fas fa-times"></i> Reject';
+            cardHtml += '</button>';
+            
+            cardHtml += '</div>';
+            cardHtml += '</div>';
+            
+            return cardHtml;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function updateConnectionStatus(message, type) {
+            const statusEl = document.getElementById('connectionStatus');
+            const iconClass = type === 'success' ? 'check-circle' : 'exclamation-triangle';
+            statusEl.innerHTML = '<i class="fas fa-' + iconClass + '"></i><span>' + message + '</span>';
+            statusEl.className = 'connection-status' + (type === 'error' ? ' error-status' : '');
+        }
+
+        function updateHeaderStats(analytics) {
+            document.getElementById('lastUpdate').textContent = analytics.last_generated ? 
+                new Date(analytics.last_generated).toLocaleString() : 'Never';
+            document.getElementById('qualityAvg').textContent = (analytics.average_quality_score || 0).toFixed(1) + '/10';
+            document.getElementById('approvalRate').textContent = Math.round(analytics.approval_rate || 0) + '%';
+        }
+
+        function updateAnalytics(analytics) {
+            document.getElementById('totalEntries').textContent = analytics.total_entries || 0;
+            document.getElementById('weeklyEntries').textContent = analytics.recent_entries || 0;
+            document.getElementById('approvalRateDetail').textContent = Math.round(analytics.approval_rate || 0) + '%';
+            document.getElementById('avgQuality').textContent = (analytics.average_quality_score || 0).toFixed(1) + '/10';
+        }
+
+        // Action handlers
+        async function postToTwitter(entryId, optionNumber) {
+            if (!confirm('Post this content to @ResponsibleAI Twitter?')) return;
+            
+            const entry = dashboardData.entries.find(e => e.id === entryId);
+            const option = entry.content_options.find(o => o.option_number == optionNumber);
+            
+            if (!option) {
+                showToast('❌ Content option not found', 'error');
+                return;
+            }
+            
+            try {
+                showToast('Posting to Twitter...', 'success');
+                
+                const response = await fetch(window.location.origin + '/.netlify/functions/post-to-twitter', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        content: option.content, 
+                        entryId: entryId,
+                        githubIssueNumber: entryId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('✅ Posted to Twitter successfully!', 'success');
+                    await updateEntryStatus(entryId, 'approved');
+                    setTimeout(loadDashboardData, 1000);
+                    
+                    if (result.tweet && result.tweet.url) {
+                        if (confirm('Open tweet in new tab?')) {
+                            window.open(result.tweet.url, '_blank');
+                        }
+                    }
+                } else {
+                    throw new Error(result.error || 'Unknown error');
+                }
+                
+            } catch (error) {
+                console.error('Twitter posting error:', error);
+                showToast('❌ Failed to post: ' + error.message, 'error');
+            }
+        }
+
+        async function approveContent(entryId, optionNumber) {
+            const entry = dashboardData.entries.find(e => e.id === entryId);
+            const option = entry.content_options.find(o => o.option_number == optionNumber);
+            
+            if (!option) return;
+            
+            try {
+                await navigator.clipboard.writeText(option.content);
+                await updateEntryStatus(entryId, 'approved');
+                showToast('✅ Content approved and copied to clipboard!', 'success');
+                setTimeout(loadDashboardData, 500);
+            } catch (error) {
+                showToast('❌ Failed to approve content', 'error');
+            }
+        }
+
+        async function copyContent(entryId, optionNumber) {
+            const entry = dashboardData.entries.find(e => e.id === entryId);
+            const option = entry.content_options.find(o => o.option_number == optionNumber);
+            
+            if (!option) return;
+            
+            try {
+                await navigator.clipboard.writeText(option.content);
+                showToast('📋 Copied to clipboard!', 'success');
+            } catch (error) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = option.content;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast('📋 Copied to clipboard!', 'success');
+            }
+        }
+
+        async function rejectContent(entryId) {
+            const reason = prompt('Rejection reason (optional):');
+            if (reason === null) return; // User cancelled
+            
+            try {
+                await updateEntryStatus(entryId, 'rejected');
+                showToast('❌ Content rejected', 'error');
+                setTimeout(loadDashboardData, 500);
+            } catch (error) {
+                showToast('❌ Failed to reject content', 'error');
+            }
+        }
+
+        async function updateEntryStatus(entryId, status) {
+            try {
+                const response = await fetch(window.location.origin + '/.netlify/functions/entry-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ entryId: entryId, status: status })
+                });
+                
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to update status');
+                }
+            } catch (error) {
+                console.error('Failed to update entry status:', error);
+                throw error;
+            }
+        }
+
+        function refreshDashboard() {
+            showToast('🔄 Refreshing...', 'success');
+            loadDashboardData();
+        }
+
+        function createTestIssue() {
+            const confirmed = confirm('This will open GitHub to create a test content review issue. Continue?');
+            if (!confirmed) return;
+            
+            const issueUrl = 'https://github.com/gbrandonwade/responsible-ai-agent/issues/new';
+            const title = encodeURIComponent('Content Review Required - Manual Test');
+            const body = encodeURIComponent('## Generated Content\\nYou don\\'t need a computer science degree to make AI work for you.\\n\\nHere\\'s what I discovered: the best AI practitioners ask better questions, not better algorithms.\\n\\nWhat\\'s one area where AI could simplify your work? #ResponsibleAI #AIEthics\\n\\n## Quality Analysis\\n- **Quality Score:** 8.5\\n- **Voice Score:** 8.2\\n- **Timestamp:** ' + new Date().toISOString() + '\\n\\n---\\n*This is a test issue created from the ResponsibleAI dashboard.*');
+            const labels = encodeURIComponent('content-review,needs-human-review');
+            
+            window.open(issueUrl + '?title=' + title + '&body=' + body + '&labels=' + labels, '_blank');
+            showToast('Opening GitHub to create test issue...', 'success');
+        }
+
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            
+            setTimeout(function() {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>`;
 
   return {
     statusCode: 200,
@@ -601,6 +832,6 @@ exports.handler = async (event, context) => {
       'Content-Type': 'text/html',
       'Access-Control-Allow-Origin': '*',
     },
-    body: html
+    body: dashboardHtml
   };
 };
