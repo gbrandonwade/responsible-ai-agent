@@ -1,7 +1,27 @@
 {
   "name": "responsible-ai-functions",
   "version": "1.0.0",
+  "description": "Live Netlify Functions for ResponsibleAI Dashboard",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test-functions.js",
+    "dev": "netlify dev",
+    "deploy": "netlify deploy --prod"
+  },
   "dependencies": {
     "node-fetch": "^3.3.2"
-  }
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "keywords": [
+    "netlify",
+    "functions",
+    "ai",
+    "dashboard",
+    "twitter",
+    "github"
+  ],
+  "author": "ResponsibleAI Team",
+  "license": "MIT"
 }
