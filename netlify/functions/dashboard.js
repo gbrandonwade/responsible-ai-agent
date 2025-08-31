@@ -1,5 +1,5 @@
-// netlify/functions/dashboard.js - BULLETPROOF SYNTAX VERSION
-// Carefully checked every line for syntax errors
+// netlify/functions/dashboard.js - SIMPLE CLEAN VERSION
+// No complex string escaping - guaranteed to work
 
 exports.handler = async (event, context) => {
   if (event.httpMethod === 'OPTIONS') {
@@ -14,7 +14,18 @@ exports.handler = async (event, context) => {
     };
   }
 
-  const html = `<!DOCTYPE html>
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'text/html',
+      'Access-Control-Allow-Origin': '*'
+    },
+    body: buildDashboardHTML()
+  };
+};
+
+function buildDashboardHTML() {
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -34,11 +45,7 @@ exports.handler = async (event, context) => {
             --gray-900: #111827;
         }
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -65,6 +72,7 @@ exports.handler = async (event, context) => {
             justify-content: space-between;
             align-items: center;
             gap: 1rem;
+            flex-wrap: wrap;
         }
         
         .logo {
@@ -74,9 +82,7 @@ exports.handler = async (event, context) => {
             font-weight: 700;
         }
         
-        .logo i {
-            margin-right: 0.75rem;
-        }
+        .logo i { margin-right: 0.75rem; }
         
         .live-badge {
             background: rgba(16, 185, 129, 0.2);
@@ -92,6 +98,7 @@ exports.handler = async (event, context) => {
             display: flex;
             gap: 1rem;
             font-size: 0.875rem;
+            flex-wrap: wrap;
         }
         
         .stat {
@@ -103,9 +110,7 @@ exports.handler = async (event, context) => {
             border-radius: 6px;
         }
         
-        .main {
-            padding: 2rem 0;
-        }
+        .main { padding: 2rem 0; }
         
         .grid {
             display: grid;
@@ -179,9 +184,7 @@ exports.handler = async (event, context) => {
             text-decoration: none;
         }
         
-        .link:hover {
-            text-decoration: underline;
-        }
+        .link:hover { text-decoration: underline; }
         
         .badge {
             padding: 0.5rem 1rem;
@@ -243,13 +246,8 @@ exports.handler = async (event, context) => {
             color: var(--gray-600);
         }
         
-        .char-warning {
-            color: var(--warning);
-        }
-        
-        .char-danger {
-            color: var(--danger);
-        }
+        .char-warning { color: var(--warning); }
+        .char-danger { color: var(--danger); }
         
         .actions {
             display: flex;
@@ -278,25 +276,10 @@ exports.handler = async (event, context) => {
             cursor: not-allowed;
         }
         
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-        
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: var(--gray-600);
-            color: white;
-        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-secondary { background: var(--gray-600); color: white; }
         
         .metric {
             display: flex;
@@ -306,9 +289,7 @@ exports.handler = async (event, context) => {
             border-bottom: 1px solid var(--gray-100);
         }
         
-        .metric:last-child {
-            border-bottom: none;
-        }
+        .metric:last-child { border-bottom: none; }
         
         .status {
             background: rgba(16, 185, 129, 0.1);
@@ -340,17 +321,9 @@ exports.handler = async (event, context) => {
             z-index: 1000;
         }
         
-        .toast.show {
-            transform: translateX(0);
-        }
-        
-        .toast.success {
-            background: var(--success);
-        }
-        
-        .toast.error {
-            background: var(--danger);
-        }
+        .toast.show { transform: translateX(0); }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
         
         .empty-state {
             text-align: center;
@@ -359,15 +332,9 @@ exports.handler = async (event, context) => {
         }
         
         @media (max-width: 768px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-            .header-content {
-                flex-direction: column;
-            }
-            .actions {
-                flex-direction: column;
-            }
+            .grid { grid-template-columns: 1fr; }
+            .header-content { flex-direction: column; }
+            .actions { flex-direction: column; }
         }
     </style>
 </head>
@@ -454,9 +421,9 @@ exports.handler = async (event, context) => {
                             <i class="fas fa-sync-alt"></i>
                             Refresh Data
                         </button>
-                        <button class="btn btn-success" onclick="createTestIssue()" style="width: 100%;">
-                            <i class="fas fa-plus"></i>
-                            Create Test Issue
+                        <button class="btn btn-success" onclick="openGitHub()" style="width: 100%;">
+                            <i class="fas fa-external-link-alt"></i>
+                            Open GitHub Issues
                         </button>
                     </div>
                 </div>
@@ -467,184 +434,197 @@ exports.handler = async (event, context) => {
     <div id="toastArea" class="toast"></div>
 
     <script>
-        var dashboardData = {
+        var app = {
             entries: [],
             analytics: {}
         };
 
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Initializing ResponsibleAI Dashboard...');
-            loadData();
-            setInterval(loadData, 120000); // 2 minutes
-        });
+        // Initialize
+        document.addEventListener('DOMContentLoaded', init);
 
-        async function loadData() {
+        function init() {
+            console.log('Starting ResponsibleAI Dashboard...');
+            loadAllData();
+            setInterval(loadAllData, 120000);
+        }
+
+        async function loadAllData() {
             try {
-                console.log('Loading data...');
+                console.log('Loading dashboard data...');
+                updateStatus('🔄 Loading data from GitHub...', 'info');
                 
-                var entriesUrl = window.location.origin + '/.netlify/functions/entries';
-                var analyticsUrl = window.location.origin + '/.netlify/functions/analytics';
+                var baseUrl = window.location.origin;
                 
-                var entriesResponse = await fetch(entriesUrl);
-                var analyticsResponse = await fetch(analyticsUrl);
-                
+                // Load entries
+                var entriesResponse = await fetch(baseUrl + '/.netlify/functions/entries');
+                if (!entriesResponse.ok) {
+                    throw new Error('Entries API returned ' + entriesResponse.status);
+                }
                 var entriesData = await entriesResponse.json();
+                
+                // Load analytics
+                var analyticsResponse = await fetch(baseUrl + '/.netlify/functions/analytics');
+                if (!analyticsResponse.ok) {
+                    throw new Error('Analytics API returned ' + analyticsResponse.status);
+                }
                 var analyticsData = await analyticsResponse.json();
                 
-                console.log('Loaded entries:', entriesData);
-                console.log('Loaded analytics:', analyticsData);
+                console.log('Entries response:', entriesData);
+                console.log('Analytics response:', analyticsData);
                 
+                // Process entries
                 if (entriesData.success) {
-                    dashboardData.entries = entriesData.entries || [];
-                    showContent(entriesData.entries || []);
-                    updateStatus('✅ Connected to GitHub Issues API', 'success');
+                    app.entries = entriesData.entries || [];
+                    displayContent(app.entries);
+                    updateStatus('✅ Connected to GitHub Issues API (' + app.entries.length + ' entries)', 'success');
                 } else {
-                    updateStatus('❌ GitHub API Error', 'error');
+                    throw new Error(entriesData.error || 'Failed to load entries');
                 }
                 
+                // Process analytics
                 if (analyticsData.success) {
-                    updateStats(analyticsData.analytics || {});
+                    app.analytics = analyticsData.analytics || {};
+                    updateDisplayedStats();
                 }
                 
             } catch (error) {
                 console.error('Load error:', error);
-                updateStatus('❌ Failed to connect to APIs', 'error');
-                showContent([]);
+                updateStatus('❌ Error: ' + error.message, 'error');
+                displayContent([]);
             }
         }
 
-        function showContent(entries) {
+        function displayContent(entries) {
             var container = document.getElementById('contentArea');
             
             if (!entries || entries.length === 0) {
-                container.innerHTML = '<div class="empty-state">' +
-                    '<i class="fas fa-check-circle" style="font-size: 3rem; color: var(--success); margin-bottom: 1rem;"></i>' +
-                    '<h3>No content pending review</h3>' +
-                    '<p style="margin: 1rem 0;">New content will appear when your Python agent creates GitHub issues</p>' +
-                    '<button class="btn btn-primary" onclick="createTestIssue()">' +
-                    '<i class="fas fa-plus"></i> Create Test Issue' +
-                    '</button>' +
-                    '</div>';
+                container.innerHTML = createEmptyState();
                 return;
             }
             
             var html = '';
             for (var i = 0; i < entries.length; i++) {
-                html += makeCard(entries[i]);
+                html += createContentCard(entries[i]);
             }
             container.innerHTML = html;
         }
 
-        function makeCard(entry) {
+        function createEmptyState() {
+            return '<div class="empty-state">' +
+                '<i class="fas fa-check-circle" style="font-size: 3rem; color: var(--success); margin-bottom: 1rem;"></i>' +
+                '<h3>No content pending review</h3>' +
+                '<p style="margin: 1rem 0;">Your dashboard is connected to GitHub but no issues found with content-review label.</p>' +
+                '<button class="btn btn-primary" onclick="openGitHub()">' +
+                '<i class="fas fa-plus"></i> View GitHub Issues' +
+                '</button>' +
+                '</div>';
+        }
+
+        function createContentCard(entry) {
+            if (!entry.content_options || entry.content_options.length === 0) {
+                return '<div class="card"><p>No content options available for entry ' + entry.id + '</p></div>';
+            }
+            
             var option = entry.content_options[0];
-            var score = option.score || 0;
-            var voice = option.voice_score || 0;
-            var content = option.content || '';
+            var score = parseFloat(option.score) || 0;
+            var voice = parseFloat(option.voice_score) || 0;
+            var content = option.content || 'No content';
             var chars = content.length;
             
             var badgeClass = score >= 8 ? 'badge-high' : score >= 6 ? 'badge-medium' : 'badge-low';
             var charClass = chars > 280 ? 'char-danger' : chars > 250 ? 'char-warning' : '';
             
-            var cardHtml = '<div class="card" data-id="' + entry.id + '">';
+            var html = '<div class="card">';
             
             // Header
-            cardHtml += '<div class="card-header">';
-            cardHtml += '<div>';
-            cardHtml += '<div class="meta">';
-            cardHtml += '<i class="fab fa-github"></i> ';
-            cardHtml += 'Generated ' + new Date(entry.created_at).toLocaleString();
-            cardHtml += '</div>';
-            cardHtml += '<div class="meta">';
-            cardHtml += '<a href="https://github.com/gbrandonwade/responsible-ai-agent/issues/' + entry.id + '" target="_blank" class="link">Issue #' + entry.id + '</a>';
-            cardHtml += ' • Topics: ' + entry.research_context.trending_topics.join(', ');
-            cardHtml += '</div>';
-            cardHtml += '</div>';
-            cardHtml += '<div class="badge ' + badgeClass + '">';
-            cardHtml += '<i class="fas fa-star"></i> ';
-            cardHtml += score.toFixed(1) + '/10';
-            cardHtml += '</div>';
-            cardHtml += '</div>';
+            html += '<div class="card-header">';
+            html += '<div>';
+            html += '<div class="meta"><i class="fab fa-github"></i> Generated ' + formatDate(entry.created_at) + '</div>';
+            html += '<div class="meta">';
+            html += '<a href="https://github.com/gbrandonwade/responsible-ai-agent/issues/' + entry.id + '" target="_blank" class="link">Issue #' + entry.id + '</a>';
+            if (entry.research_context && entry.research_context.trending_topics) {
+                html += ' • Topics: ' + entry.research_context.trending_topics.join(', ');
+            }
+            html += '</div>';
+            html += '</div>';
+            html += '<div class="badge ' + badgeClass + '"><i class="fas fa-star"></i> ' + score.toFixed(1) + '/10</div>';
+            html += '</div>';
             
             // Content
-            cardHtml += '<div class="content-preview">';
-            cardHtml += escapeHtml(content);
-            cardHtml += '</div>';
+            html += '<div class="content-preview">' + escapeHtml(content) + '</div>';
             
             // Character info
-            cardHtml += '<div class="char-info">';
-            cardHtml += '<span><strong>Voice Score:</strong> ' + voice.toFixed(1) + '/10</span>';
-            cardHtml += '<span class="' + charClass + '">' + chars + '/280 characters</span>';
-            cardHtml += '</div>';
+            html += '<div class="char-info">';
+            html += '<span><strong>Voice Score:</strong> ' + voice.toFixed(1) + '/10</span>';
+            html += '<span class="' + charClass + '">' + chars + '/280 characters</span>';
+            html += '</div>';
             
             // Actions
-            cardHtml += '<div class="actions">';
-            
+            html += '<div class="actions">';
             if (chars <= 280) {
-                cardHtml += '<button class="btn btn-success" onclick="postTweet(\'' + entry.id + '\', \'' + option.option_number + '\')">';
-                cardHtml += '<i class="fas fa-paper-plane"></i> Post to Twitter';
-                cardHtml += '</button>';
+                html += '<button class="btn btn-success" onclick="postToTwitter(' + entry.id + ')">';
+                html += '<i class="fas fa-paper-plane"></i> Post to Twitter</button>';
             } else {
-                cardHtml += '<button class="btn btn-success" disabled>';
-                cardHtml += '<i class="fas fa-exclamation-triangle"></i> Too Long';
-                cardHtml += '</button>';
+                html += '<button class="btn btn-success" disabled><i class="fas fa-exclamation-triangle"></i> Too Long</button>';
             }
+            html += '<button class="btn btn-primary" onclick="approveContent(' + entry.id + ')">';
+            html += '<i class="fas fa-check"></i> Approve & Copy</button>';
+            html += '<button class="btn btn-secondary" onclick="copyContent(' + entry.id + ')">';
+            html += '<i class="fas fa-copy"></i> Copy</button>';
+            html += '<button class="btn btn-danger" onclick="rejectContent(' + entry.id + ')">';
+            html += '<i class="fas fa-times"></i> Reject</button>';
+            html += '</div>';
             
-            cardHtml += '<button class="btn btn-primary" onclick="approveContent(\'' + entry.id + '\', \'' + option.option_number + '\')">';
-            cardHtml += '<i class="fas fa-check"></i> Approve & Copy';
-            cardHtml += '</button>';
-            
-            cardHtml += '<button class="btn btn-secondary" onclick="copyText(\'' + entry.id + '\', \'' + option.option_number + '\')">';
-            cardHtml += '<i class="fas fa-copy"></i> Copy';
-            cardHtml += '</button>';
-            
-            cardHtml += '<button class="btn btn-danger" onclick="rejectContent(\'' + entry.id + '\')">';
-            cardHtml += '<i class="fas fa-times"></i> Reject';
-            cardHtml += '</button>';
-            
-            cardHtml += '</div>';
-            cardHtml += '</div>';
-            
-            return cardHtml;
+            html += '</div>';
+            return html;
+        }
+
+        function formatDate(dateString) {
+            try {
+                return new Date(dateString).toLocaleString();
+            } catch (e) {
+                return dateString;
+            }
         }
 
         function escapeHtml(text) {
             var div = document.createElement('div');
-            div.textContent = text;
+            div.textContent = text || '';
             return div.innerHTML;
         }
 
         function updateStatus(message, type) {
             var statusEl = document.getElementById('statusBar');
-            var iconClass = type === 'success' ? 'check-circle' : 'exclamation-triangle';
+            var iconClass = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle';
             statusEl.innerHTML = '<i class="fas fa-' + iconClass + '"></i><span>' + message + '</span>';
             statusEl.className = 'status' + (type === 'error' ? ' status-error' : '');
         }
 
-        function updateStats(analytics) {
-            document.getElementById('lastUpdate').textContent = analytics.last_generated ? 
-                new Date(analytics.last_generated).toLocaleString() : 'Never';
-            document.getElementById('qualityAvg').textContent = (analytics.average_quality_score || 0).toFixed(1) + '/10';
-            document.getElementById('approvalRate').textContent = Math.round(analytics.approval_rate || 0) + '%';
+        function updateDisplayedStats() {
+            var stats = app.analytics;
             
-            document.getElementById('totalEntries').textContent = analytics.total_entries || 0;
-            document.getElementById('weeklyEntries').textContent = analytics.recent_entries || 0;
-            document.getElementById('approvalRate2').textContent = Math.round(analytics.approval_rate || 0) + '%';
-            document.getElementById('avgQuality').textContent = (analytics.average_quality_score || 0).toFixed(1) + '/10';
+            document.getElementById('lastUpdate').textContent = stats.last_generated ? 
+                formatDate(stats.last_generated) : 'Never';
+            document.getElementById('qualityAvg').textContent = (stats.average_quality_score || 0).toFixed(1) + '/10';
+            document.getElementById('approvalRate').textContent = Math.round(stats.approval_rate || 0) + '%';
+            
+            document.getElementById('totalEntries').textContent = stats.total_entries || 0;
+            document.getElementById('weeklyEntries').textContent = stats.recent_entries || 0;
+            document.getElementById('approvalRate2').textContent = Math.round(stats.approval_rate || 0) + '%';
+            document.getElementById('avgQuality').textContent = (stats.average_quality_score || 0).toFixed(1) + '/10';
         }
 
         // Action functions
-        async function postTweet(entryId, optionNumber) {
-            if (!confirm('Post this content to @ResponsibleAI Twitter?')) {
+        async function postToTwitter(entryId) {
+            if (!confirm('Post this content to Twitter?')) return;
+            
+            var entry = findEntry(entryId);
+            if (!entry || !entry.content_options[0]) {
+                showToast('Entry not found', 'error');
                 return;
             }
             
-            var entry = dashboardData.entries.find(function(e) { return e.id === entryId; });
-            var option = entry.content_options.find(function(o) { return o.option_number == optionNumber; });
-            
-            if (!option) {
-                showToast('Content not found', 'error');
-                return;
-            }
+            var content = entry.content_options[0].content;
             
             try {
                 showToast('Posting to Twitter...', 'success');
@@ -653,7 +633,7 @@ exports.handler = async (event, context) => {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        content: option.content, 
+                        content: content,
                         entryId: entryId,
                         githubIssueNumber: entryId
                     })
@@ -663,57 +643,48 @@ exports.handler = async (event, context) => {
                 
                 if (result.success) {
                     showToast('✅ Posted to Twitter!', 'success');
-                    await updateEntry(entryId, 'approved');
-                    setTimeout(loadData, 1000);
-                    
-                    if (result.tweet && result.tweet.url) {
-                        if (confirm('Open tweet in new tab?')) {
-                            window.open(result.tweet.url, '_blank');
-                        }
+                    await updateEntryStatus(entryId, 'approved');
+                    setTimeout(loadAllData, 1000);
+                    if (result.tweet && result.tweet.url && confirm('Open tweet?')) {
+                        window.open(result.tweet.url, '_blank');
                     }
                 } else {
-                    throw new Error(result.error || 'Failed to post');
+                    throw new Error(result.error || 'Post failed');
                 }
                 
             } catch (error) {
                 console.error('Twitter error:', error);
-                showToast('❌ Failed to post: ' + error.message, 'error');
+                showToast('❌ Failed: ' + error.message, 'error');
             }
         }
 
-        async function approveContent(entryId, optionNumber) {
-            var entry = dashboardData.entries.find(function(e) { return e.id === entryId; });
-            var option = entry.content_options.find(function(o) { return o.option_number == optionNumber; });
+        async function approveContent(entryId) {
+            var entry = findEntry(entryId);
+            if (!entry || !entry.content_options[0]) return;
             
-            if (!option) return;
+            var content = entry.content_options[0].content;
             
             try {
-                await navigator.clipboard.writeText(option.content);
-                await updateEntry(entryId, 'approved');
+                await copyToClipboard(content);
+                await updateEntryStatus(entryId, 'approved');
                 showToast('✅ Approved and copied!', 'success');
-                setTimeout(loadData, 500);
+                setTimeout(loadAllData, 500);
             } catch (error) {
                 showToast('❌ Failed to approve', 'error');
             }
         }
 
-        async function copyText(entryId, optionNumber) {
-            var entry = dashboardData.entries.find(function(e) { return e.id === entryId; });
-            var option = entry.content_options.find(function(o) { return o.option_number == optionNumber; });
+        async function copyContent(entryId) {
+            var entry = findEntry(entryId);
+            if (!entry || !entry.content_options[0]) return;
             
-            if (!option) return;
+            var content = entry.content_options[0].content;
             
             try {
-                await navigator.clipboard.writeText(option.content);
-                showToast('📋 Copied to clipboard!', 'success');
-            } catch (error) {
-                var textArea = document.createElement('textarea');
-                textArea.value = option.content;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
+                await copyToClipboard(content);
                 showToast('📋 Copied!', 'success');
+            } catch (error) {
+                showToast('❌ Copy failed', 'error');
             }
         }
 
@@ -722,62 +693,51 @@ exports.handler = async (event, context) => {
             if (reason === null) return;
             
             try {
-                await updateEntry(entryId, 'rejected');
-                showToast('❌ Content rejected', 'error');
-                setTimeout(loadData, 500);
+                await updateEntryStatus(entryId, 'rejected');
+                showToast('❌ Rejected', 'error');
+                setTimeout(loadAllData, 500);
             } catch (error) {
                 showToast('❌ Failed to reject', 'error');
             }
         }
 
-        async function updateEntry(entryId, status) {
+        async function copyToClipboard(text) {
             try {
-                var response = await fetch(window.location.origin + '/.netlify/functions/entry-status', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ entryId: entryId, status: status })
-                });
-                
-                var result = await response.json();
-                if (!result.success) {
-                    throw new Error(result.error || 'Update failed');
-                }
+                await navigator.clipboard.writeText(text);
             } catch (error) {
-                console.error('Update error:', error);
-                throw error;
+                var textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
             }
+        }
+
+        async function updateEntryStatus(entryId, status) {
+            var response = await fetch(window.location.origin + '/.netlify/functions/entry-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ entryId: entryId, status: status })
+            });
+            
+            var result = await response.json();
+            if (!result.success) {
+                throw new Error(result.error || 'Update failed');
+            }
+        }
+
+        function findEntry(entryId) {
+            return app.entries.find(function(e) { return e.id == entryId; });
         }
 
         function refreshData() {
             showToast('🔄 Refreshing...', 'success');
-            loadData();
+            loadAllData();
         }
 
-        function createTestIssue() {
-            var confirmed = confirm('Create a test GitHub issue for content review?');
-            if (!confirmed) return;
-            
-            var issueUrl = 'https://github.com/gbrandonwade/responsible-ai-agent/issues/new';
-            var title = encodeURIComponent('Content Review Required - Manual Test');
-            var timestamp = new Date().toISOString();
-            
-            var bodyText = '## Generated Content\\n' +
-                'You don\\'t need a computer science degree to make AI work for you.\\n\\n' +
-                'Here\\'s what I discovered: the best AI practitioners ask better questions, not better algorithms.\\n\\n' +
-                'What\\'s one area where AI could simplify your work? #ResponsibleAI #AIEthics\\n\\n' +
-                '## Quality Analysis\\n' +
-                '- **Quality Score:** 8.5\\n' +
-                '- **Voice Score:** 8.2\\n' +
-                '- **Timestamp:** ' + timestamp + '\\n\\n' +
-                '---\\n' +
-                '*Test issue created from ResponsibleAI dashboard.*';
-            
-            var body = encodeURIComponent(bodyText);
-            var labels = encodeURIComponent('content-review,needs-human-review');
-            
-            var fullUrl = issueUrl + '?title=' + title + '&body=' + body + '&labels=' + labels;
-            window.open(fullUrl, '_blank');
-            showToast('Opening GitHub...', 'success');
+        function openGitHub() {
+            window.open('https://github.com/gbrandonwade/responsible-ai-agent/issues', '_blank');
         }
 
         function showToast(message, type) {
@@ -785,7 +745,6 @@ exports.handler = async (event, context) => {
             toast.textContent = message;
             toast.className = 'toast ' + type;
             toast.classList.add('show');
-            
             setTimeout(function() {
                 toast.classList.remove('show');
             }, 3000);
@@ -793,13 +752,4 @@ exports.handler = async (event, context) => {
     </script>
 </body>
 </html>`;
-
-  return {
-    statusCode: 200,
-    headers: {
-      'Content-Type': 'text/html',
-      'Access-Control-Allow-Origin': '*'
-    },
-    body: html
-  };
-};
+}
