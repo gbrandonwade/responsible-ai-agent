@@ -486,7 +486,7 @@ exports.handler = async (event, context) => {
   html += '}';
   
   html += 'function openGitHubActions() {';
-  html += 'window.open("https://github.com/your-username/responsible-ai-agent/actions", "_blank");';
+  html += 'window.open("https://github.com/gbrandonwade/responsible-ai-agent/actions", "_blank");';
   html += '}';
   
   html += 'function showToast(message, type) {';
