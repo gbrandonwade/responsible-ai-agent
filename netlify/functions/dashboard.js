@@ -712,8 +712,9 @@ exports.handler = async (event, context) => {
 
             function updateConnectionStatus(message, type) {
                 const statusEl = document.getElementById('connectionStatus');
-                statusEl.innerHTML = \`<i class="fas fa-\${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'}"></i><span>\${message}</span>\`;
-                statusEl.className = \`connection-status \${type === 'error' ? 'error-status' : ''}\`;
+                const iconClass = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle';
+                statusEl.innerHTML = '<i class="fas fa-' + iconClass + '"></i><span>' + message + '</span>';
+                statusEl.className = 'connection-status' + (type === 'error' ? ' error-status' : '');
             }
 
             // Load dashboard data from GitHub Issues API
@@ -774,22 +775,20 @@ exports.handler = async (event, context) => {
                 const container = document.getElementById('pendingContent');
                 
                 if (!entries || entries.length === 0) {
-                    container.innerHTML = \`
-                        <div class="no-content">
-                            <i class="fas fa-check-circle" style="font-size: 3rem; color: var(--success-color); margin-bottom: 1rem;"></i>
-                            <p><strong>No content pending review</strong></p>
-                            <p style="font-size: 0.875rem; color: var(--gray-600); margin-top: 0.5rem;">
-                                New content will appear here when your Python agent creates GitHub issues
-                            </p>
-                            <p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 1rem;">
-                                Connected to: GitHub Issues API • Twitter API • Live Data
-                            </p>
-                            <button class="btn btn-primary" onclick="triggerPipeline()" style="margin-top: 1rem;">
-                                <i class="fas fa-play"></i>
-                                Generate New Content
-                            </button>
-                        </div>
-                    \`;
+                    container.innerHTML = 
+                        '<div class="no-content">' +
+                        '<i class="fas fa-check-circle" style="font-size: 3rem; color: var(--success-color); margin-bottom: 1rem;"></i>' +
+                        '<p><strong>No content pending review</strong></p>' +
+                        '<p style="font-size: 0.875rem; color: var(--gray-600); margin-top: 0.5rem;">' +
+                        'New content will appear here when your Python agent creates GitHub issues' +
+                        '</p>' +
+                        '<p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 1rem;">' +
+                        'Connected to: GitHub Issues API • Twitter API • Live Data' +
+                        '</p>' +
+                        '<button class="btn btn-primary" onclick="triggerPipeline()" style="margin-top: 1rem;">' +
+                        '<i class="fas fa-play"></i> Generate New Content' +
+                        '</button>' +
+                        '</div>';
                     return;
                 }
                 
@@ -801,68 +800,90 @@ exports.handler = async (event, context) => {
                 const qualityClass = bestOption.score >= 8 ? 'quality-high' : 
                                   bestOption.score >= 6 ? 'quality-medium' : 'quality-low';
                 
-                const githubUrl = entry.github_issue_url || \`https://github.com/\${getRepoOwner()}/\${getRepoName()}/issues/\${entry.id}\`;
+                const repoOwner = 'your-username'; // Will be dynamically set
+                const repoName = 'responsible-ai-agent';
+                const githubUrl = entry.github_issue_url || 'https://github.com/' + repoOwner + '/' + repoName + '/issues/' + entry.id;
                 
-                return \`
-                    <div class="content-card" data-entry-id="\${entry.id}">
-                        <div class="card-header">
-                            <div>
-                                <div class="card-meta">
-                                    <i class="fab fa-github"></i>
-                                    Generated \${new Date(entry.created_at).toLocaleString()}
-                                    • <a href="\${githubUrl}" target="_blank" class="github-link">Issue #\${entry.id}</a>
-                                </div>
-                                <div class="card-meta">
-                                    📊 Based on: \${entry.research_context.trending_topics.join(', ')}
-                                </div>
-                            </div>
-                            <span class="quality-badge \${qualityClass}">
-                                <i class="fas fa-star"></i>
-                                \${bestOption.score.toFixed(1)}/10
-                            </span>
-                        </div>
-                        
-                        \${entry.content_options.map((option, index) => \`
-                            <div class="option-container \${option.recommended ? 'option-recommended' : ''}">
-                                <div class="option-header">
-                                    <span>
-                                        \${index === 0 ? '🏆' : index === 1 ? '🥈' : '🥉'}
-                                        Option \${option.option_number}
-                                        \${option.recommended ? ' (Recommended)' : ''}
-                                    </span>
-                                    <span style="color: var(--gray-600);">
-                                        Voice: \${option.voice_score.toFixed(1)}/10
-                                    </span>
-                                </div>
-                                
-                                <div class="tweet-preview">\${option.content}</div>
-                                
-                                <div class="character-count \${option.content.length > 250 ? 'warning' : ''} \${option.content.length > 280 ? 'danger' : ''}">
-                                    \${option.content.length}/280 characters
-                                </div>
-                                
-                                <div class="action-buttons">
-                                    <button class="btn btn-success" onclick="approveAndPost('\${entry.id}', \${option.option_number}, \\\`\${option.content.replace(/\`/g, '\\\\\\`').replace(/\\n/g, '\\\\n')}\\\`)" \${option.content.length > 280 ? 'disabled' : ''}>
-                                        <i class="fas fa-paper-plane"></i>
-                                        Approve & Post to Twitter
-                                    </button>
-                                    <button class="btn btn-primary" onclick="approveOption('\${entry.id}', \${option.option_number})">
-                                        <i class="fas fa-check"></i>
-                                        Approve & Copy Only
-                                    </button>
-                                    <button class="btn btn-secondary" onclick="copyToClipboard(\\\`\${option.content.replace(/\`/g, '\\\\\\`').replace(/\\n/g, '\\\\n')}\\\`)">
-                                        <i class="fas fa-copy"></i>
-                                        Copy Text
-                                    </button>
-                                    <button class="btn btn-danger" onclick="rejectOption('\${entry.id}', \${option.option_number})">
-                                        <i class="fas fa-times"></i>
-                                        Reject
-                                    </button>
-                                </div>
-                            </div>
-                        \`).join('')}
-                    </div>
-                \`;
+                let cardHtml = '<div class="content-card" data-entry-id="' + entry.id + '">';
+                
+                // Card header
+                cardHtml += '<div class="card-header">';
+                cardHtml += '<div>';
+                cardHtml += '<div class="card-meta">';
+                cardHtml += '<i class="fab fa-github"></i> ';
+                cardHtml += 'Generated ' + new Date(entry.created_at).toLocaleString();
+                cardHtml += ' • <a href="' + githubUrl + '" target="_blank" class="github-link">Issue #' + entry.id + '</a>';
+                cardHtml += '</div>';
+                cardHtml += '<div class="card-meta">';
+                cardHtml += '📊 Based on: ' + entry.research_context.trending_topics.join(', ');
+                cardHtml += '</div>';
+                cardHtml += '</div>';
+                cardHtml += '<span class="quality-badge ' + qualityClass + '">';
+                cardHtml += '<i class="fas fa-star"></i> ';
+                cardHtml += bestOption.score.toFixed(1) + '/10';
+                cardHtml += '</span>';
+                cardHtml += '</div>';
+                
+                // Content options
+                entry.content_options.forEach((option, index) => {
+                    const isRecommended = option.recommended;
+                    const emoji = index === 0 ? '🏆' : index === 1 ? '🥈' : '🥉';
+                    
+                    cardHtml += '<div class="option-container' + (isRecommended ? ' option-recommended' : '') + '">';
+                    
+                    // Option header
+                    cardHtml += '<div class="option-header">';
+                    cardHtml += '<span>' + emoji + ' Option ' + option.option_number;
+                    cardHtml += (isRecommended ? ' (Recommended)' : '') + '</span>';
+                    cardHtml += '<span style="color: var(--gray-600);">Voice: ' + option.voice_score.toFixed(1) + '/10</span>';
+                    cardHtml += '</div>';
+                    
+                    // Tweet preview
+                    cardHtml += '<div class="tweet-preview">' + escapeHtml(option.content) + '</div>';
+                    
+                    // Character count
+                    const charClass = option.content.length > 280 ? ' danger' : option.content.length > 250 ? ' warning' : '';
+                    cardHtml += '<div class="character-count' + charClass + '">';
+                    cardHtml += option.content.length + '/280 characters';
+                    cardHtml += '</div>';
+                    
+                    // Action buttons
+                    cardHtml += '<div class="action-buttons">';
+                    
+                    // Approve & Post button
+                    const disabledAttr = option.content.length > 280 ? ' disabled' : '';
+                    cardHtml += '<button class="btn btn-success" onclick="approveAndPost(\'' + entry.id + '\', ' + option.option_number + ', this)"' + disabledAttr + '>';
+                    cardHtml += '<i class="fas fa-paper-plane"></i> Approve & Post to Twitter';
+                    cardHtml += '</button>';
+                    
+                    // Approve & Copy button  
+                    cardHtml += '<button class="btn btn-primary" onclick="approveOption(\'' + entry.id + '\', ' + option.option_number + ')">';
+                    cardHtml += '<i class="fas fa-check"></i> Approve & Copy Only';
+                    cardHtml += '</button>';
+                    
+                    // Copy button
+                    cardHtml += '<button class="btn btn-secondary" onclick="copyContent(this, \'' + entry.id + '\', ' + option.option_number + ')">';
+                    cardHtml += '<i class="fas fa-copy"></i> Copy Text';
+                    cardHtml += '</button>';
+                    
+                    // Reject button
+                    cardHtml += '<button class="btn btn-danger" onclick="rejectOption(\'' + entry.id + '\', ' + option.option_number + ')">';
+                    cardHtml += '<i class="fas fa-times"></i> Reject';
+                    cardHtml += '</button>';
+                    
+                    cardHtml += '</div>'; // Close action-buttons
+                    cardHtml += '</div>'; // Close option-container
+                });
+                
+                cardHtml += '</div>'; // Close content-card
+                
+                return cardHtml;
+            }
+
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
             }
 
             function updateAnalytics(analytics) {
@@ -874,17 +895,24 @@ exports.handler = async (event, context) => {
             }
 
             // Action handlers for LIVE system
-            async function approveAndPost(entryId, optionNumber, content) {
+            async function approveAndPost(entryId, optionNumber, buttonElement) {
                 if (!confirm('This will approve the content AND post it directly to @ResponsibleAI Twitter. Are you sure?')) {
                     return;
                 }
 
                 try {
+                    // Get content from the entry data
+                    const entry = dashboardData.entries.find(e => e.id === entryId);
+                    const option = entry?.content_options.find(o => o.option_number === optionNumber);
+                    
+                    if (!option) {
+                        throw new Error('Content option not found');
+                    }
+                    
                     // Disable button to prevent double posting
-                    const button = event.target;
-                    const originalText = button.innerHTML;
-                    button.disabled = true;
-                    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+                    const originalText = buttonElement.innerHTML;
+                    buttonElement.disabled = true;
+                    buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
                     
                     showToast('Posting to Twitter...', 'success');
                     
@@ -894,7 +922,7 @@ exports.handler = async (event, context) => {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            content: content,
+                            content: option.content,
                             entryId: entryId,
                             githubIssueNumber: entryId
                         })
@@ -912,7 +940,7 @@ exports.handler = async (event, context) => {
                             tweet_id: postResult.tweet.id
                         });
                         
-                        showToast(\`✅ Posted to Twitter! \${postResult.tweet.url}\`, 'success');
+                        showToast('✅ Posted to Twitter! ' + postResult.tweet.url, 'success');
                         
                         // Optional: Open tweet in new tab
                         if (confirm('Open tweet in new tab?')) {
@@ -928,12 +956,14 @@ exports.handler = async (event, context) => {
 
                 } catch (error) {
                     console.error('Post to Twitter error:', error);
-                    showToast(\`❌ Failed to post: \${error.message}\`, 'error');
+                    showToast('❌ Failed to post: ' + error.message, 'error');
                 } finally {
-                    // Re-enable button
-                    const button = event.target;
-                    button.disabled = false;
-                    button.innerHTML = originalText;
+                    // Re-enable button if still exists
+                    if (buttonElement && !buttonElement.disabled) return;
+                    if (buttonElement) {
+                        buttonElement.disabled = false;
+                        buttonElement.innerHTML = '<i class="fas fa-paper-plane"></i> Approve & Post to Twitter';
+                    }
                 }
             }
 
@@ -942,32 +972,59 @@ exports.handler = async (event, context) => {
                 const option = entry?.content_options.find(o => o.option_number === optionNumber);
                 
                 if (option) {
-                    await copyToClipboard(option.content);
-                    await updateEntryStatus(entryId, 'approved', { 
-                        approved_option: optionNumber,
-                        posted_to_twitter: false,
-                        manual_approval: true
-                    });
-                    showToast('✅ Content approved and copied to clipboard!', 'success');
-                    
-                    // Refresh dashboard
-                    setTimeout(loadDashboardData, 500);
+                    const success = await copyToClipboard(option.content);
+                    if (success) {
+                        await updateEntryStatus(entryId, 'approved', { 
+                            approved_option: optionNumber,
+                            posted_to_twitter: false,
+                            manual_approval: true
+                        });
+                        showToast('✅ Content approved and copied to clipboard!', 'success');
+                        
+                        // Refresh dashboard
+                        setTimeout(loadDashboardData, 500);
+                    }
+                }
+            }
+
+            async function copyContent(buttonElement, entryId, optionNumber) {
+                const entry = dashboardData.entries.find(e => e.id === entryId);
+                const option = entry?.content_options.find(o => o.option_number === optionNumber);
+                
+                if (option) {
+                    const success = await copyToClipboard(option.content);
+                    if (success) {
+                        showToast('📋 Copied to clipboard!', 'success');
+                        
+                        // Visual feedback on button
+                        const originalText = buttonElement.innerHTML;
+                        buttonElement.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                        setTimeout(() => {
+                            buttonElement.innerHTML = originalText;
+                        }, 1500);
+                    }
                 }
             }
 
             async function rejectOption(entryId, optionNumber) {
                 const reason = prompt('Why is this content being rejected? (This will be added to the GitHub issue)');
                 
-                await updateEntryStatus(entryId, 'rejected', { 
-                    rejected_option: optionNumber,
-                    rejection_reason: reason || 'No reason provided',
-                    rejected_at: new Date().toISOString()
-                });
+                if (reason === null) return; // User cancelled
                 
-                showToast('❌ Content rejected', 'error');
-                
-                // Refresh dashboard
-                setTimeout(loadDashboardData, 500);
+                try {
+                    await updateEntryStatus(entryId, 'rejected', { 
+                        rejected_option: optionNumber,
+                        rejection_reason: reason || 'No reason provided',
+                        rejected_at: new Date().toISOString()
+                    });
+                    
+                    showToast('❌ Content rejected', 'error');
+                    
+                    // Refresh dashboard
+                    setTimeout(loadDashboardData, 500);
+                } catch (error) {
+                    showToast('Failed to reject content: ' + error.message, 'error');
+                }
             }
 
             async function updateEntryStatus(entryId, status, feedback = null) {
