@@ -1,5 +1,6 @@
-// netlify/functions/entry-status.js
-// Handles individual entry status updates (approve/reject)
+// netlify/functions/entry-status.js - LIVE VERSION
+// Handles individual entry status updates (approve/reject) with GitHub integration
+
 exports.handler = async (event, context) => {
   // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
@@ -30,9 +31,17 @@ exports.handler = async (event, context) => {
   }
 
   try {
+    const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+    const REPO_OWNER = process.env.GITHUB_REPO_OWNER || 'your-username';
+    const REPO_NAME = process.env.GITHUB_REPO_NAME || 'responsible-ai-agent';
+
+    if (!GITHUB_TOKEN) {
+      throw new Error('GITHUB_TOKEN not configured in environment variables');
+    }
+
     // Parse the request body
     const body = JSON.parse(event.body || '{}');
-    const { entryId, status, feedback, approvedOption } = body;
+    const { entryId, status, feedback } = body;
 
     // Extract entry ID from path if it's a path parameter
     const pathParts = event.path.split('/');
@@ -54,26 +63,65 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // In a real app, you'd update your database here
-    // For demo, we'll just return success
-    const updateResult = {
-      entry_id: finalEntryId,
-      old_status: 'pending_review',
-      new_status: status || 'approved',
-      updated_at: new Date().toISOString(),
-      feedback: feedback || null,
-      approved_option: approvedOption || null
+    const githubHeaders = {
+      'Authorization': `token ${GITHUB_TOKEN}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'ResponsibleAI-Dashboard'
     };
 
-    // If status is 'approved', you might want to:
-    // 1. Save to your posting queue
-    // 2. Create a GitHub issue for posting
-    // 3. Send to your Twitter API
+    // Update the GitHub issue
+    const updateUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/issues/${finalEntryId}`;
     
-    if (status === 'approved') {
-      console.log(`Entry ${finalEntryId} approved for posting`);
-      // TODO: Add logic to queue for posting
+    console.log('Updating GitHub issue:', finalEntryId, 'Status:', status);
+
+    // Prepare update data based on status
+    let updateData = {
+      labels: status === 'approved' 
+        ? ['content-review', 'approved'] 
+        : ['content-review', 'rejected']
+    };
+
+    // Add comment with feedback
+    if (feedback) {
+      const commentUrl = `${updateUrl}/comments`;
+      const commentBody = `## Review Decision: ${status.toUpperCase()}\n\n` +
+        `**Feedback:** ${JSON.stringify(feedback, null, 2)}\n\n` +
+        `**Reviewed at:** ${new Date().toISOString()}\n` +
+        `**Reviewed via:** ResponsibleAI Dashboard`;
+
+      const commentResponse = await fetch(commentUrl, {
+        method: 'POST',
+        headers: githubHeaders,
+        body: JSON.stringify({ body: commentBody })
+      });
+
+      if (!commentResponse.ok) {
+        console.warn('Failed to add comment to GitHub issue');
+      }
     }
+
+    // Close issue if approved or rejected (but not if posting to Twitter)
+    if (status === 'approved' || status === 'rejected') {
+      if (!feedback?.posted_to_twitter) {
+        // Only close if not posting to Twitter (posting function will close it)
+        updateData.state = 'closed';
+        updateData.state_reason = status === 'approved' ? 'completed' : 'not_planned';
+      }
+    }
+
+    // Update the issue
+    const updateResponse = await fetch(updateUrl, {
+      method: 'PATCH',
+      headers: githubHeaders,
+      body: JSON.stringify(updateData)
+    });
+
+    if (!updateResponse.ok) {
+      const errorData = await updateResponse.json();
+      throw new Error(`GitHub API error: ${updateResponse.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    const updatedIssue = await updateResponse.json();
 
     return {
       statusCode: 200,
@@ -84,8 +132,16 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({
         success: true,
         message: 'Entry status updated successfully',
-        data: updateResult,
-        timestamp: new Date().toISOString()
+        data: {
+          entry_id: finalEntryId,
+          old_status: 'pending_review',
+          new_status: status,
+          updated_at: new Date().toISOString(),
+          feedback: feedback || null,
+          github_issue_url: updatedIssue.html_url
+        },
+        timestamp: new Date().toISOString(),
+        demo_mode: false
       })
     };
 
@@ -101,7 +157,8 @@ exports.handler = async (event, context) => {
       body: JSON.stringify({
         success: false,
         error: error.message,
-        details: 'Failed to update entry status'
+        details: 'Failed to update entry status in GitHub',
+        demo_mode: false
       })
     };
   }
