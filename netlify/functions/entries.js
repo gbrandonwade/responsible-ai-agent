@@ -152,28 +152,39 @@ function parseIssueToEntry(issue) {
     
     // Extract content from issue body
     const body = issue.body || '';
-    const lines = body.split('\\n');
+    console.log('🔍 Issue body length:', body.length);
+    console.log('🔍 Issue body preview:', body.substring(0, 200));
+    
+    const lines = body.split('\n'); // Use actual newlines, not escaped
+    console.log('🔍 Body split into', lines.length, 'lines');
     
     let content = '';
     let qualityScore = 0;
     
     // Look for content after "## Generated Content"
     let inContentSection = false;
+    let contentLines = [];
+    
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       
       if (line === '## Generated Content') {
+        console.log('🔍 Found Generated Content section at line', i);
         inContentSection = true;
         continue;
       }
       
       if (inContentSection) {
+        // Stop at next section header
         if (line.startsWith('##')) {
-          // Hit next section, stop
+          console.log('🔍 End of content section at line', i, 'with header:', line);
           break;
         }
-        if (line.length > 0 && !line.startsWith('-') && !line.startsWith('*')) {
-          content += (content ? '\\n' : '') + line;
+        
+        // Skip empty lines and markdown formatting
+        if (line.length > 0 && !line.startsWith('-') && !line.startsWith('*') && !line.startsWith('**')) {
+          contentLines.push(line);
+          console.log('🔍 Added content line:', line);
         }
       }
       
@@ -182,30 +193,40 @@ function parseIssueToEntry(issue) {
         const match = line.match(/(\d+\.?\d*)/);
         if (match) {
           qualityScore = parseFloat(match[1]);
+          console.log('🔍 Found quality score:', qualityScore);
         }
       }
     }
     
-    // If no content found in structured format, use first non-empty line
-    if (!content) {
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (line && !line.startsWith('#') && !line.startsWith('-') && !line.startsWith('*')) {
-          content = line;
-          break;
-        }
+    // Join content lines with actual newlines
+    content = contentLines.join('\n');
+    console.log('🔍 Final parsed content:', content);
+    console.log('🔍 Content length:', content.length);
+    
+    // If no structured content found, try alternative parsing
+    if (!content || content.length < 10) {
+      console.log('🔍 No structured content found, trying alternative parsing...');
+      
+      // Look for any substantial text that looks like tweet content
+      const bodyText = body.replace(/##.*$/gm, '').replace(/\*\*.*?\*\*/g, '').replace(/-.*$/gm, '');
+      const sentences = bodyText.split('\n').filter(line => {
+        const trimmed = line.trim();
+        return trimmed.length > 20 && !trimmed.startsWith('*') && !trimmed.startsWith('-');
+      });
+      
+      if (sentences.length > 0) {
+        content = sentences.slice(0, 3).join('\n').trim(); // Take first 3 substantial sentences
+        console.log('🔍 Alternative content found:', content);
       }
     }
     
-    // Default content if still nothing found
-    if (!content) {
-      content = 'Content not found in issue body - please check issue format';
+    // Fallback if still no content
+    if (!content || content.length < 5) {
+      content = 'Content extraction failed - raw body length: ' + body.length;
+      console.log('🔍 Using fallback content');
     }
 
-    console.log('🔍 Parsed content length:', content.length);
-    console.log('🔍 Parsed quality score:', qualityScore);
-
-    return {
+    const result = {
       id: issue.number.toString(),
       created_at: issue.created_at,
       status: 'pending_review',
@@ -227,9 +248,18 @@ function parseIssueToEntry(issue) {
         research_sources: ['GitHub Issues'],
         model_used: 'manual',
         issue_number: issue.number,
-        issue_title: issue.title
+        issue_title: issue.title,
+        parsing_debug: {
+          original_body_length: body.length,
+          lines_count: lines.length,
+          content_lines_found: contentLines.length,
+          final_content_length: content.length
+        }
       }
     };
+    
+    console.log('🔍 Created entry:', result);
+    return result;
 
   } catch (error) {
     console.error('❌ Error parsing issue:', error);
@@ -239,7 +269,7 @@ function parseIssueToEntry(issue) {
       status: 'pending_review',
       content_options: [{
         option_number: 1,
-        content: 'Error parsing content: ' + error.message,
+        content: 'Parsing error: ' + error.message + ' - Issue body: ' + (issue.body || 'empty').substring(0, 100),
         score: 0,
         voice_score: 0,
         recommended: false
