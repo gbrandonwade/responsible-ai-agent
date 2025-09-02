@@ -1,5 +1,5 @@
-// netlify/functions/post-to-twitter.js - UPDATED FOR OAUTH 2.0 & API v2
-// Posts approved content using Twitter API v2 with OAuth 2.0
+// netlify/functions/post-to-twitter.js - FIXED FOR TWITTER API v2
+// Posts approved content using Twitter API v2 with proper authentication
 
 exports.handler = async (event, context) => {
   // Handle CORS preflight
@@ -31,15 +31,16 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Get Twitter API v2 credentials
+    // Get Twitter API v2 credentials (prioritize OAuth 2.0)
     const TWITTER_BEARER_TOKEN = process.env.TWITTER_BEARER_TOKEN;
-    const TWITTER_CLIENT_ID = process.env.TWITTER_CLIENT_ID;
-    const TWITTER_CLIENT_SECRET = process.env.TWITTER_CLIENT_SECRET;
-    const TWITTER_ACCESS_TOKEN = process.env.TWITTER_ACCESS_TOKEN; // OAuth 2.0 access token
-    const TWITTER_REFRESH_TOKEN = process.env.TWITTER_REFRESH_TOKEN;
+    const TWITTER_ACCESS_TOKEN = process.env.TWITTER_ACCESS_TOKEN; 
+    const TWITTER_ACCESS_SECRET = process.env.TWITTER_ACCESS_SECRET;
+    const TWITTER_API_KEY = process.env.TWITTER_API_KEY;
+    const TWITTER_API_SECRET = process.env.TWITTER_API_SECRET;
 
-    if (!TWITTER_BEARER_TOKEN && !TWITTER_ACCESS_TOKEN) {
-      throw new Error('Twitter API credentials not configured. Need either BEARER_TOKEN or ACCESS_TOKEN');
+    // Check if we have required credentials
+    if (!TWITTER_BEARER_TOKEN && (!TWITTER_ACCESS_TOKEN || !TWITTER_ACCESS_SECRET)) {
+      throw new Error('Twitter API credentials not properly configured. Need either BEARER_TOKEN or ACCESS_TOKEN+ACCESS_SECRET');
     }
 
     // Parse request body
@@ -51,81 +52,75 @@ exports.handler = async (event, context) => {
     }
 
     if (content.length > 280) {
-      throw new Error('Content exceeds Twitter character limit (280)');
+      throw new Error(`Content exceeds Twitter character limit: ${content.length}/280 characters`);
     }
 
     console.log('Posting to Twitter via API v2:', content.substring(0, 50) + '...');
 
+    // Prepare the tweet data
+    const tweetData = {
+      text: content
+    };
+
     let tweetResponse;
-    let authHeader;
 
-    // Try OAuth 2.0 access token first (preferred)
-    if (TWITTER_ACCESS_TOKEN) {
-      authHeader = `Bearer ${TWITTER_ACCESS_TOKEN}`;
-    } else if (TWITTER_BEARER_TOKEN) {
-      // Fallback to Bearer token (app-only auth)
-      authHeader = `Bearer ${TWITTER_BEARER_TOKEN}`;
-    } else {
-      throw new Error('No valid Twitter authentication method available');
+    // Try OAuth 2.0 Bearer token first (app-only auth)
+    if (TWITTER_BEARER_TOKEN) {
+      console.log('Attempting with Bearer Token...');
+      
+      tweetResponse = await fetch('https://api.twitter.com/2/tweets', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${TWITTER_BEARER_TOKEN}`,
+          'Content-Type': 'application/json',
+          'User-Agent': 'ResponsibleAI-Bot/2.0'
+        },
+        body: JSON.stringify(tweetData)
+      });
+
+      // Bearer token might not work for posting, try OAuth 1.0a
+      if (!tweetResponse.ok && (TWITTER_ACCESS_TOKEN && TWITTER_ACCESS_SECRET)) {
+        console.log('Bearer token failed, trying OAuth 1.0a...');
+        tweetResponse = await postWithOAuth1(tweetData, {
+          TWITTER_API_KEY,
+          TWITTER_API_SECRET, 
+          TWITTER_ACCESS_TOKEN,
+          TWITTER_ACCESS_SECRET
+        });
+      }
+    } else if (TWITTER_ACCESS_TOKEN && TWITTER_ACCESS_SECRET) {
+      // Use OAuth 1.0a directly
+      console.log('Using OAuth 1.0a...');
+      tweetResponse = await postWithOAuth1(tweetData, {
+        TWITTER_API_KEY,
+        TWITTER_API_SECRET,
+        TWITTER_ACCESS_TOKEN, 
+        TWITTER_ACCESS_SECRET
+      });
     }
-
-    // Post using Twitter API v2
-    tweetResponse = await fetch('https://api.twitter.com/2/tweets', {
-      method: 'POST',
-      headers: {
-        'Authorization': authHeader,
-        'Content-Type': 'application/json',
-        'User-Agent': 'ResponsibleAI-Bot/2.0'
-      },
-      body: JSON.stringify({
-        text: content
-      })
-    });
 
     if (!tweetResponse.ok) {
-      const errorData = await tweetResponse.json();
+      const errorData = await tweetResponse.json().catch(() => ({}));
       console.error('Twitter API v2 error:', errorData);
-      
-      // If access token failed, try bearer token
-      if (tweetResponse.status === 401 && TWITTER_ACCESS_TOKEN && TWITTER_BEARER_TOKEN) {
-        console.log('Retrying with Bearer token...');
-        
-        tweetResponse = await fetch('https://api.twitter.com/2/tweets', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${TWITTER_BEARER_TOKEN}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            text: content
-          })
-        });
-        
-        if (!tweetResponse.ok) {
-          const retryError = await tweetResponse.json();
-          throw new Error(`Twitter API v2 error: ${tweetResponse.status} - ${JSON.stringify(retryError)}`);
-        }
-      } else {
-        throw new Error(`Twitter API v2 error: ${tweetResponse.status} - ${JSON.stringify(errorData)}`);
-      }
+      throw new Error(`Twitter API error: ${tweetResponse.status} - ${JSON.stringify(errorData)}`);
     }
 
-    const tweetData = await tweetResponse.json();
+    const responseData = await tweetResponse.json();
     
-    if (!tweetData.data || !tweetData.data.id) {
+    if (!responseData.data || !responseData.data.id) {
       throw new Error('Invalid response from Twitter API - no tweet ID returned');
     }
 
-    console.log('Tweet posted successfully:', tweetData.data.id);
+    console.log('Tweet posted successfully:', responseData.data.id);
 
-    // Get Twitter username for URL (default to ResponsibleAI)
-    const twitterHandle = 'ResponsibleAI'; // Update this if your handle is different
-    const tweetUrl = `https://twitter.com/${twitterHandle}/status/${tweetData.data.id}`;
+    // Get Twitter username for URL (you should set this to your actual handle)
+    const twitterHandle = process.env.TWITTER_HANDLE || 'ResponsibleAI';
+    const tweetUrl = `https://twitter.com/${twitterHandle}/status/${responseData.data.id}`;
 
     // Update GitHub issue with posting confirmation
     try {
       await updateGitHubWithPosting(entryId, githubIssueNumber, {
-        id: tweetData.data.id,
+        id: responseData.data.id,
         text: content,
         url: tweetUrl,
         created_at: new Date().toISOString()
@@ -145,10 +140,11 @@ exports.handler = async (event, context) => {
         success: true,
         message: 'Content posted to Twitter successfully via API v2',
         tweet: {
-          id: tweetData.data.id,
+          id: responseData.data.id,
           url: tweetUrl,
           posted_at: new Date().toISOString(),
           content: content,
+          character_count: content.length,
           api_version: 'v2'
         },
         entry_id: entryId,
@@ -175,6 +171,57 @@ exports.handler = async (event, context) => {
   }
 };
 
+// OAuth 1.0a posting function (for when Bearer token isn't sufficient)
+async function postWithOAuth1(tweetData, credentials) {
+  const crypto = require('crypto');
+  
+  const { TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET } = credentials;
+  
+  if (!TWITTER_API_KEY || !TWITTER_API_SECRET || !TWITTER_ACCESS_TOKEN || !TWITTER_ACCESS_SECRET) {
+    throw new Error('Missing OAuth 1.0a credentials');
+  }
+
+  // Generate OAuth signature
+  const oauthParams = {
+    oauth_consumer_key: TWITTER_API_KEY,
+    oauth_token: TWITTER_ACCESS_TOKEN,
+    oauth_signature_method: 'HMAC-SHA1',
+    oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
+    oauth_nonce: crypto.randomBytes(16).toString('hex'),
+    oauth_version: '1.0'
+  };
+
+  // Create signature base string
+  const paramString = Object.keys(oauthParams)
+    .sort()
+    .map(key => `${key}=${encodeURIComponent(oauthParams[key])}`)
+    .join('&');
+
+  const baseString = `POST&${encodeURIComponent('https://api.twitter.com/2/tweets')}&${encodeURIComponent(paramString)}`;
+  
+  // Create signing key
+  const signingKey = `${encodeURIComponent(TWITTER_API_SECRET)}&${encodeURIComponent(TWITTER_ACCESS_SECRET)}`;
+  
+  // Generate signature
+  const signature = crypto.createHmac('sha1', signingKey).update(baseString).digest('base64');
+  oauthParams.oauth_signature = signature;
+
+  // Create authorization header
+  const authHeader = 'OAuth ' + Object.keys(oauthParams)
+    .map(key => `${key}="${encodeURIComponent(oauthParams[key])}"`)
+    .join(', ');
+
+  return await fetch('https://api.twitter.com/2/tweets', {
+    method: 'POST',
+    headers: {
+      'Authorization': authHeader,
+      'Content-Type': 'application/json',
+      'User-Agent': 'ResponsibleAI-Bot/2.0'
+    },
+    body: JSON.stringify(tweetData)
+  });
+}
+
 // Update GitHub issue with posting confirmation  
 async function updateGitHubWithPosting(entryId, githubIssueNumber, tweetData) {
   const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -197,9 +244,10 @@ async function updateGitHubWithPosting(entryId, githubIssueNumber, tweetData) {
     `**Tweet URL:** ${tweetData.url}\n` +
     `**Posted at:** ${tweetData.created_at}\n` +
     `**Tweet ID:** ${tweetData.id}\n` +
+    `**Character Count:** ${tweetData.text.length}/280\n` +
     `**API Version:** Twitter API v2\n\n` +
-    `**Content Posted:**\n${tweetData.text}\n\n` +
-    `---\n*Automatically posted via ResponsibleAI Dashboard (OAuth 2.0)*`;
+    `**Content Posted:**\n> ${tweetData.text}\n\n` +
+    `---\n*Automatically posted via ResponsibleAI Dashboard*`;
 
   const commentResponse = await fetch(commentUrl, {
     method: 'POST',
