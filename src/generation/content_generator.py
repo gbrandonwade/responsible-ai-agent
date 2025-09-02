@@ -1,10 +1,10 @@
-import openai
 import json
 import os
 import logging
 import random
 from typing import Dict, List
 from datetime import datetime
+from openai import OpenAI
 
 class ResponsibleAIContentGenerator:
     """Generate content using your authentic voice profile"""
@@ -20,9 +20,16 @@ class ResponsibleAIContentGenerator:
         except FileNotFoundError:
             self.logger.error("Voice profile not found! Please ensure data/voice_profile.json exists")
             raise
+        except KeyError:
+            self.logger.error("Invalid voice profile structure")
+            raise
         
-        # Set OpenAI API key
-        openai.api_key = os.getenv('OPENAI_API_KEY')
+        # Initialize OpenAI client (v1 API)
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable not set")
+        
+        self.client = OpenAI(api_key=api_key)
         
     def generate_tweet(self, research_data: Dict) -> Dict:
         """Generate a tweet based on research data and your voice profile"""
@@ -36,14 +43,16 @@ class ResponsibleAIContentGenerator:
         prompt = self._build_generation_prompt(trending_topics, news_articles)
         
         try:
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+            # Use OpenAI v1 API
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",  # Updated to better, cheaper model
                 messages=[
                     {"role": "system", "content": self._get_system_prompt()},
                     {"role": "user", "content": prompt}
                 ],
                 max_tokens=120,
-                temperature=0.7
+                temperature=0.7,
+                timeout=30  # Add timeout
             )
             
             generated_content = response.choices[0].message.content.strip()
@@ -59,7 +68,9 @@ class ResponsibleAIContentGenerator:
                     'news_count': len(news_articles)
                 },
                 'generated_at': datetime.now().isoformat(),
-                'voice_alignment': quality_score > 0.75
+                'voice_alignment': quality_score > 0.75,
+                'model_used': 'gpt-4o-mini',
+                'character_count': len(generated_content)
             }
             
         except Exception as e:
@@ -110,7 +121,7 @@ Write tweets that sound like a knowledgeable friend sharing discoveries about re
         if news_articles:
             top_articles = news_articles[:2]
             for article in top_articles:
-                context_parts.append(f"Recent news: {article['title']}")
+                context_parts.append(f"Recent news: {article.get('title', 'Unknown title')}")
         
         context = " | ".join(context_parts) if context_parts else "General AI ethics discussion"
         
@@ -194,12 +205,16 @@ Tweet:"""
             "The real secret to AI success? It's not about the technology—it's about understanding the problem you're trying to solve. What problem would you tackle first? #ResponsibleAI"
         ]
         
+        selected_tweet = random.choice(fallback_tweets)
+        
         return {
-            'content': random.choice(fallback_tweets),
+            'content': selected_tweet,
             'quality_score': 0.8,
             'research_used': {'fallback': True},
             'generated_at': datetime.now().isoformat(),
-            'voice_alignment': True
+            'voice_alignment': True,
+            'model_used': 'fallback',
+            'character_count': len(selected_tweet)
         }
     
     def test_voice_consistency(self, num_samples: int = 3) -> None:
@@ -223,6 +238,8 @@ Tweet:"""
             print(f"Content: {result['content']}")
             print(f"Voice Score: {result['quality_score']:.2f}")
             print(f"Alignment: {'✅' if result['voice_alignment'] else '❌'}")
+            print(f"Model: {result.get('model_used', 'unknown')}")
+            print(f"Length: {result.get('character_count', 0)}/280")
             print("-" * 40)
 
 # Test the content generator
@@ -237,6 +254,21 @@ if __name__ == "__main__":
         print(f"Brand Archetype: {generator.voice['overall_personality']['brand_archetype']}")
         print(f"Primary Audience: {generator.voice['target_audience']['primary_audience']}")
         
+        # Test API connectivity
+        test_research = {
+            'trending_topics': ['AI testing'],
+            'news_articles': [{'title': 'Testing OpenAI Integration'}]
+        }
+        
+        print("\n🧪 Testing OpenAI API connectivity...")
+        result = generator.generate_tweet(test_research)
+        
+        if result.get('model_used') != 'fallback':
+            print("✅ OpenAI API connected successfully!")
+            print(f"Generated: {result['content'][:50]}...")
+        else:
+            print("⚠️ Using fallback content - check API key")
+        
         # Test voice consistency
         generator.test_voice_consistency()
         
@@ -245,3 +277,4 @@ if __name__ == "__main__":
         print("\nPlease ensure:")
         print("1. data/voice_profile.json exists with your voice data")
         print("2. OPENAI_API_KEY is set in your environment")
+        print("3. openai>=1.0.0 is installed (pip install -r requirements.txt)")
