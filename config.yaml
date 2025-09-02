@@ -9,6 +9,10 @@ responsible_ai:
     - "inclusive AI"
     - "responsible AI"
     - "AI accountability"
+    - "explainable AI"
+    - "AI regulation"
+    - "algorithmic fairness"
+    - "AI audit"
   
   posting_schedule:
     time: "12:00"  # UTC (8 AM EST)
@@ -16,16 +20,70 @@ responsible_ai:
     
   content_rules:
     max_length: 280
+    min_length: 50
     require_citations: true
     min_engagement_threshold: 50
-    quality_threshold: 0.75
+    quality_threshold: 0.7
+    voice_alignment_threshold: 0.75
     
 apis:
   openai:
-    model: "gpt-3.5-turbo"
+    model: "gpt-4o-mini"  # Updated to better, more cost-effective model
     max_tokens: 120
     temperature: 0.7
+    timeout: 30
+    
+  twitter:
+    api_version: "v2"  # Use Twitter API v2
+    rate_limit_buffer: 10  # Seconds between requests
     
   news:
-    max_articles: 5
+    max_articles: 10
     hours_back: 24
+    min_relevance_score: 1.0
+    request_timeout: 10
+    
+pipeline:
+  phases:
+    - "research"
+    - "generation" 
+    - "quality_control"
+    - "posting_decision"
+    - "analytics"
+    
+  retry_attempts: 3
+  backoff_multiplier: 2
+  
+quality_control:
+  checks:
+    voice_alignment:
+      weight: 0.4
+      threshold: 0.75
+    length:
+      weight: 0.25  
+      min_chars: 50
+      max_chars: 280
+    hashtags:
+      weight: 0.15
+      required: true
+    engagement:
+      weight: 0.15
+      patterns: ["?", "what", "how", "why", "think", "thoughts"]
+    model_quality:
+      weight: 0.05
+      exclude_fallback: true
+      
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file_retention_days: 30
+  
+analytics:
+  retention_days: 90
+  metrics:
+    - "quality_score"
+    - "voice_alignment" 
+    - "character_count"
+    - "engagement_rate"
+    - "approval_rate"
+    - "trending_topics"
