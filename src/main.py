@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Main orchestration script for @ResponsibleAI content agent
 Runs research → generation → quality control → posting pipeline
@@ -301,6 +300,7 @@ class ResponsibleAIAgent:
         else:
             print(f"Error: {result.get('error', 'Unknown error')}")
 
+# Fix: Un-indent the main() function and the if __name__ block
 def main():
     """Main entry point"""
     
