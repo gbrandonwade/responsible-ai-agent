@@ -6,22 +6,37 @@
   "scripts": {
     "test": "node test-functions.js",
     "dev": "netlify dev",
-    "deploy": "netlify deploy --prod"
+    "deploy": "netlify deploy --prod",
+    "build": "echo 'Functions ready for deployment'",
+    "start": "netlify dev"
   },
   "dependencies": {
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.1"
   },
   "devDependencies": {
-    "netlify-cli": "^17.0.0"
+    "netlify-cli": "^17.15.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "keywords": [
     "netlify",
     "functions",
     "ai",
-    "dashboard",
+    "dashboard", 
     "twitter",
-    "github"
+    "github",
+    "responsible-ai",
+    "content-generation"
   ],
   "author": "ResponsibleAI Team",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gbrandonwade/responsible-ai-agent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gbrandonwade/responsible-ai-agent/issues"
+  },
+  "homepage": "https://github.com/gbrandonwade/responsible-ai-agent#readme"
 }
