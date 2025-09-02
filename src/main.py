@@ -35,7 +35,6 @@ class ResponsibleAIAgent:
         try:
             self.news_researcher = NewsResearcher()
             self.content_generator = ResponsibleAIContentGenerator()
-            # self.twitter_poster = TwitterPoster()  # Will add when Twitter API ready
             
             self.logger.info("✅ All components initialized successfully")
             
@@ -116,10 +115,6 @@ class ResponsibleAIAgent:
             self.logger.info(f"📰 Found {len(news_articles)} relevant articles")
             self.logger.info(f"🔥 Trending topics: {', '.join(trending_topics[:3])}")
             
-            # TODO: Add Twitter research when API is available
-            # viral_tweets = self.twitter_researcher.research_viral_ai_content()
-            # research_results['viral_tweets'] = viral_tweets
-            
         except Exception as e:
             self.logger.warning(f"Research phase warning: {e}")
             # Continue with partial data
@@ -159,7 +154,6 @@ class ResponsibleAIAgent:
         
         # Calculate overall quality score
         checks_passed = 0.0
-        total_weight = 1.0
         
         # Voice alignment check (weight: 40%)
         voice_score = quality_checks['voice_alignment']
@@ -172,7 +166,7 @@ class ResponsibleAIAgent:
         char_count = quality_checks['character_count']
         if 50 <= char_count <= 280:
             checks_passed += 0.25
-        elif char_count <= 320:  # Slightly over limit
+        elif char_count <= 320:
             checks_passed += 0.1
         
         # Hashtag check (weight: 15%)
@@ -192,7 +186,7 @@ class ResponsibleAIAgent:
         quality_result = {
             'score': overall_score,
             'checks': quality_checks,
-            'passed': overall_score > 0.7,  # 70% threshold for auto-posting
+            'passed': overall_score > 0.7,
             'needs_review': overall_score <= 0.7,
             'issues': []
         }
@@ -221,11 +215,6 @@ class ResponsibleAIAgent:
         }
         
         if quality_result['passed']:
-            # TODO: Post to Twitter when API is available
-            # result = self.twitter_poster.post_tweet(content)
-            # posting_result['posted'] = result['success']
-            
-            # For now, just log that we would post
             self.logger.info("✅ Content approved for posting!")
             posting_result['action_taken'] = 'approved_for_posting'
             
@@ -236,7 +225,6 @@ class ResponsibleAIAgent:
                 self._set_github_output('QUALITY_SCORE', str(quality_result.get('score', 0)))
             
         else:
-            # Queue for human review
             self.logger.warning("⚠️ Content needs human review")
             posting_result['action_taken'] = 'queued_for_review'
             
@@ -252,15 +240,12 @@ class ResponsibleAIAgent:
     def _store_pipeline_results(self, results: Dict) -> None:
         """Store pipeline results for analytics and learning"""
         
-        # Create data directory if it doesn't exist
         os.makedirs('data/analytics', exist_ok=True)
         
-        # Store daily results
         date_str = datetime.now().strftime('%Y-%m-%d')
         results_file = f'data/analytics/pipeline_results_{date_str}.json'
         
         try:
-            # Sanitize results for JSON serialization
             sanitized_results = self._sanitize_for_json(results)
             
             with open(results_file, 'w', encoding='utf-8') as f:
@@ -277,12 +262,12 @@ class ResponsibleAIAgent:
             return {k: self._sanitize_for_json(v) for k, v in obj.items()}
         elif isinstance(obj, list):
             return [self._sanitize_for_json(item) for item in obj]
-        elif hasattr(obj, 'isoformat'):  # datetime objects
+        elif hasattr(obj, 'isoformat'):
             return obj.isoformat()
         elif isinstance(obj, (str, int, float, bool)) or obj is None:
             return obj
         else:
-            return str(obj)  # Convert other types to string
+            return str(obj)
     
     def _set_github_output(self, name: str, value: str) -> None:
         """Set GitHub Actions output variable"""
@@ -311,7 +296,7 @@ class ResponsibleAIAgent:
             print(f"Content: {result['content']}")
             print(f"Quality Score: {result['quality_score']:.2f}")
             print(f"Voice Alignment: {'✅' if result.get('voice_alignment') else '❌'}")
-            print(f"Character Count: {result.get('character_count', 0)}/280")
+            print(f"Character Count: {result.get('character_count', 0)}/280 chars")
             print(f"Would Post: {'✅' if result.get('content_posted') else '⏳ Needs Review'}")
         else:
             print(f"Error: {result.get('error', 'Unknown error')}")
