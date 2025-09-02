@@ -300,7 +300,6 @@ class ResponsibleAIAgent:
         else:
             print(f"Error: {result.get('error', 'Unknown error')}")
 
-# Fix: Un-indent the main() function and the if __name__ block
 def main():
     """Main entry point"""
     
