@@ -321,6 +321,9 @@ def main():
                 print(f"Ready to Post: {'Yes' if result.get('content_posted') else 'Needs Review'}")
             else:
                 print(f"Error: {result.get('error', 'Unknown error')}")
+    except Exception as e:
+        print(f"Unexpected error in main: {e}")
+        sys.exit(1)  # Optional: Exit with error code
 
 if __name__ == "__main__":
     main()
